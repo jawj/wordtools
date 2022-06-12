@@ -11,3 +11,7 @@ export const deterministicReplacer = (_: any, v: any) =>
 
 export const deterministicStringify = (obj: any, space?: string | number | undefined) =>
   JSON.stringify(obj, deterministicReplacer, space);
+
+export function stringWithCommas(n: number) {
+  return String(n).replace(/\d(?=(\d{3})+\b)/g, '$&,');
+}

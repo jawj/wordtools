@@ -1,5 +1,5 @@
 body {
-  font: 20px/25px 'Source Sans Pro', sans-serif;
+  font: 20px/26px 'Source Sans Pro', sans-serif;
   margin: 4vh 6vw;
   color: #333;
 }
@@ -20,8 +20,18 @@ body {
   margin: 1ex 0 0;
 }
 
+.navigation {
+  margin: 2ex 0 0;
+  text-align: center;
+}
+
+.navigation a {
+  text-decoration: none;
+}
+
 .credits {
   font-size: 12px;
+  line-height: 16px;
   margin: 5ex 0;
 }
 

@@ -17,13 +17,16 @@ const
     })),
   prevWords = Object.keys(wordPrevs),
 
-  allWords = [...prevWords, ...wikiWords, ...web2, ...aspell].map(s => s.toLowerCase().replace(/[^a-z]+/g, '')),
+  allWords = [...prevWords, ...wikiWords, ...web2, ...aspell]
+    .map(s => s.toLowerCase().replace(/[^a-z]+/g, ''))
+    .filter(w => w.length > 1 || w === 'a' || w === 'i' || w === 'o'),
   result: Record<string, number> = {},
 
   weight = (word: string) => parseFloat((
     1 +
     (wordPrevs[word] ? 15 * Math.pow(wordPrevs[word], 2) : 0) +  // .5 words are already pretty obscure, so we square this measure
     (!wordPrevs[word] && word.endsWith('s') && wordPrevs[word.slice(0, -1)] ? 15 * Math.pow(wordPrevs[word.slice(0, -1)], 2) : 0) +
+    (!wordPrevs[word] && word.endsWith('ies') && wordPrevs[word.slice(0, -3) + 'y'] ? 15 * Math.pow(wordPrevs[word.slice(0, -3) + 'y'], 2) : 0) +
     (wikiWordCounts[word] ? Math.log10(Math.max(10, wikiWordCounts[word])) : 0)
   ).toFixed(2));
 

@@ -90,13 +90,17 @@ export function* stringCombos(s: string) {  // s must be standardised and alphab
 export const anagramGoodness = (words: string[], wordWeights: Record<string, number>) =>
   words.reduce((memo, word) => Math.min(memo, wordWeights[word]), Infinity);
 
+let combosTried = 0;
+
 export async function findAnagrams(
   s: string,
   minWords: number,
   maxWords: number,
   reportEvery: number,
-  progressListener: (currentResults: string[][]) => boolean,
+  progressListener: (currentResults: string[][], combosTried: number) => boolean,
 ) {
+  combosTried = 0;
+
   const
     std = alphabetise(standardise(s)),
     hash = await getHash(),
@@ -115,7 +119,7 @@ async function _findAnagrams(
   minWords: number,
   maxWords: number,
   reportEvery: number,
-  progressListener: (currentResults: string[][]) => boolean,
+  progressListener: (currentResults: string[][], combosTried: number) => boolean,
   hash: Awaited<ReturnType<typeof getHash>>,
   results: string[][] = [],
   priorWords: string[][] = [],
@@ -134,13 +138,15 @@ async function _findAnagrams(
 
   if (maxWords > 1) {
     for (const [s1, s2] of stringCombos(s)) {
+      combosTried++;
+
       const words1 = hash[s1];
       if (!words1) continue;
 
       // progress reporting + aborting
       const now = Date.now();
       if (now > status.nextReport) {
-        const carryOn = progressListener(results);
+        const carryOn = progressListener(results, combosTried);
         if (!carryOn) return results;  // abort
 
         await wait(0);
