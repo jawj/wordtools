@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { Nav } from './Nav';
 import { stringWithCommas } from './util';
 import { getWordWeights } from './words';
 import wordsMatchingPattern from './wordsMatchingPattern';
@@ -69,75 +70,77 @@ export function Pattern() {
         firstOnPage = page * itemsPerPage,
         lastOnPage = firstOnPage + itemsPerPage;
 
-      return m('.pattern',
-        m('h2', 'Find words with unknown letters'),
-        loading ? m('.message', 'Loading dictionary ...') :
-          m('.interface',
-            m('.pattern-entry',
-              m('input.pattern-input', {
-                type: 'search',
-                autocorrect: 'off',
-                autocomplete: 'off',
-                autocapitalize: 'none',
-                spellcheck: false,
-                size: 15,
-                value: pattern,
-                onchange: (e: { currentTarget: HTMLInputElement; }) => {
-                  const { value } = e.currentTarget;
-                  m.route.set('/pattern/:pattern/:order/0', { pattern: value, order: currentOrder });
-                }
-              }),
-              m('button', 'Find'),
-              m('dl.instructions',
-                m('dt', 'Wildcards'),
-                m('dd', m.trust(`Use <span class="letter">.</span> or <span class="letter">?</span> for each unknown letter`)),
-                m('dd', m.trust(`Use <span class="letter">*</span> for unknown numbers of them`)),
-              ),
-              m('dl.order',
-                m('dt', 'Show first'),
-                orderRadio('common', ' Commonest words'),
-                orderRadio('short', ' Shortest words'),
-                orderRadio('a-z', ' A – Z')
-              ),
-              m('.message',
-                !pattern ? ['Please enter a search pattern above (',
-                  m('a', { href: '#', onclick: showExample }, m.trust('see&nbsp;example')), ')'] :
-                  working ? 'Searching ...' :
-                    matches.length ? `${stringWithCommas(matches.length)} matching words found` +
-                      (matches.length > itemsPerPage ? ` (showing ${stringWithCommas(firstOnPage)} – ${stringWithCommas(lastOnPage - 1)})` : '') :
-                      'No matching words found'),
-              m('.matches', matches.slice(firstOnPage, lastOnPage).map(r =>
-                m('a.match', { href: `https://www.google.com/search?q=${r}+definition`, target: '_blank' }, r)
-              )),
-              m('.navigation',
-                page > 0 && m('a.prev', {
-                  href: '#',
-                  onclick: () => {
-                    m.route.set('/pattern/:pattern/:order/:page', { ...vnode.attrs, page: page - 1 });
-                    window.scrollTo(0, 0);
-                    return false;
+      return m('.page',
+        m(Nav),
+        m('.pattern',
+          m('h2', 'Find words with unknown letters'),
+          loading ? m('.message', 'Loading dictionary ...') :
+            m('.interface',
+              m('.pattern-entry',
+                m('input.pattern-input', {
+                  type: 'search',
+                  autocorrect: 'off',
+                  autocomplete: 'off',
+                  autocapitalize: 'none',
+                  spellcheck: false,
+                  size: 15,
+                  value: pattern,
+                  onchange: (e: { currentTarget: HTMLInputElement; }) => {
+                    const { value } = e.currentTarget;
+                    m.route.set('/pattern/:pattern/:order/0', { pattern: value, order: currentOrder });
                   }
-                }, m.trust('&laquo; Previous')),
-                m.trust(' &nbsp; '),
-                lastOnPage < matches.length && m('a.next', {
-                  href: '#',
-                  onclick: () => {
-                    m.route.set('/pattern/:pattern/:order/:page', { ...vnode.attrs, page: page + 1 });
-                    window.scrollTo(0, 0);
-                    return false;
-                  }
-                }, m.trust('Next &raquo;'))
-              )
-            ),
-            m('.credits', m.trust(`We use a dictionary of ${stringWithCommas(dictionarySize)} names and English word
+                }),
+                m('button', 'Find'),
+                m('dl.instructions',
+                  m('dt', 'Wildcards'),
+                  m('dd', m.trust(`Use <span class="letter">.</span> or <span class="letter">?</span> for each unknown letter`)),
+                  m('dd', m.trust(`Use <span class="letter">*</span> for unknown numbers of them`)),
+                ),
+                m('dl.order',
+                  m('dt', 'Show first'),
+                  orderRadio('common', ' Commonest words'),
+                  orderRadio('short', ' Shortest words'),
+                  orderRadio('a-z', ' A – Z')
+                ),
+                m('.message',
+                  !pattern ? ['Please enter a search pattern above (',
+                    m('a', { href: '#', onclick: showExample }, m.trust('see&nbsp;example')), ')'] :
+                    working ? 'Searching ...' :
+                      matches.length ? `${stringWithCommas(matches.length)} matching words found` +
+                        (matches.length > itemsPerPage ? ` (showing ${stringWithCommas(firstOnPage)} – ${stringWithCommas(lastOnPage - 1)})` : '') :
+                        'No matching words found'),
+                m('.matches', matches.slice(firstOnPage, lastOnPage).map(r =>
+                  m('a.match', { href: `https://www.google.com/search?q=${r}+definition`, target: '_blank' }, r)
+                )),
+                m('.navigation',
+                  page > 0 && m('a.prev', {
+                    href: '#',
+                    onclick: () => {
+                      m.route.set('/pattern/:pattern/:order/:page', { ...vnode.attrs, page: page - 1 });
+                      window.scrollTo(0, 0);
+                      return false;
+                    }
+                  }, m.trust('&laquo; Previous')),
+                  m.trust(' &nbsp; '),
+                  lastOnPage < matches.length && m('a.next', {
+                    href: '#',
+                    onclick: () => {
+                      m.route.set('/pattern/:pattern/:order/:page', { ...vnode.attrs, page: page + 1 });
+                      window.scrollTo(0, 0);
+                      return false;
+                    }
+                  }, m.trust('Next &raquo;'))
+                )
+              ),
+              m('.credits', m.trust(`We use a dictionary of ${stringWithCommas(dictionarySize)} names and English word
 s derived from 
             <a href="http://aspell.net/">aspell</a>,
             <a href="http://web.mit.edu/freebsd/head/share/dict/">web2</a>,
             <a href="https://en.wikpedia.org">Wikipedia</a> and
             <a href="http://crr.ugent.be/archives/2045">Brysbaert et al.</a>.
             Many of these aren't valid in word games.`))
-          )
-      );
+            )
+        ));
     },
     oncreate: updateMatches,
     onupdate: updateMatches,
