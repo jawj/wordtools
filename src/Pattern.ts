@@ -94,7 +94,7 @@ export function Pattern() {
                 m('dl.instructions',
                   m('dt', 'Wildcards'),
                   m('dd', m.trust(`Use <span class="letter">.</span> or <span class="letter">?</span> for each unknown letter`)),
-                  m('dd', m.trust(`Use <span class="letter">*</span> for unknown numbers of them`)),
+                  m('dd', m.trust(`Use <span class="letter">*</span> for any number of unknowns`)),
                 ),
                 m('dl.order',
                   m('dt', 'Show first'),
