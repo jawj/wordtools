@@ -84,16 +84,16 @@ export function Pattern() {
             params: { ...vnode.attrs, page: p },
           }, String(p))
         ),
-        example = (pattern: string, orderDir = 'freq/desc') => m(m.route.Link, { href: `/pattern/${pattern}/${orderDir}/1` }, pattern),
+        example = (pattern: string, orderDir = 'freq/desc') =>
+          m(m.route.Link, { href: `/pattern/${pattern}/${orderDir}/1`, selector: 'a.example' }, pattern),
         rURL = 'http://economicspsychologypolicy.blogspot.com/2013/10/lecture-summary-judgement-heuristics.html',
         examples = [
           m('h4', 'Examples'),
           m('ul',
-            m('li', example('...s.w.r.')),
-            m('li', example('*tz')),
+            m('li', example('...s.w.r.'), ', ', example('*tz'), ' or ', example('*sh.p*sh.p*')),
             m('li', example('*a*e*i*o*u*', 'length/asc'), ' (shortest words with all vowels in order)'),
+            m('li', example('r..*'), ' and ', example('..r*'), ' (words of 3+ letters with ', m('a', { href: rURL, target: '_blank' }, 'R first vs. R third'), ')'),
             m('li', example('*', 'length/desc'), ' (longest words)'),
-            m('li', example('r..*'), ' and ', example('..r*'), ' (words of 3+ letters with ', m('a', { href: rURL }, 'R first vs. R third'), ')'),
           )
         ];
 

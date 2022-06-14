@@ -61,6 +61,7 @@ a {
 
 .credits a {
   color: inherit;
+  text-decoration: underline;
 }
 
 input,
@@ -125,9 +126,16 @@ label {
   color: inherit;
 }
 
-.letter {
+.letter,
+.example {
   display: inline-block;
   padding: 0 .75ex .05ex;
+  margin: 1px;
+  letter-spacing: .05ex;
   border-radius: 1ex;
   background: #eee;
+}
+
+.example {
+  background: #eeeefc;
 }

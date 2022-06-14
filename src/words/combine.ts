@@ -21,7 +21,7 @@ const
     })),
   prevWords = Object.keys(wordPrevs),
 
-  allWords = [...prevWords, ...wikiWords, ...web2, ...aspell]
+  allWords = [...prevWords, ...wikiWords, ...web2, ...aspell, 'briony']
     .map(s => s.toLowerCase().replace(/[^a-z]+/g, ''))
     .filter(w => w.length > 1 || w === 'a' || w === 'i' || w === 'o'),
 
