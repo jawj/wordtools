@@ -121,7 +121,7 @@ export function Pattern() {
                   !pattern ? ['Please enter a search pattern above (',
                     m(m.route.Link, { href: '/pattern/p.tt*/freq/desc/1' }, m.trust('see&nbsp;example')), ')'] :
                     working ? 'Searching ...' :
-                      matches.length ? `${stringWithCommas(matches.length)} matching words found` +
+                      matches.length ? `${stringWithCommas(matches.length)} words found` +
                         (matches.length > itemsPerPage ? ` (showing ${stringWithCommas(firstOnPage)} – ${stringWithCommas(lastOnPage)})` : '') :
                         'No matching words found'),
                 pagination(),
