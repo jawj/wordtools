@@ -10,7 +10,8 @@ const
 
 interface PatternAttrs {
   pattern: string | undefined;
-  order: 'common' | 'short' | 'a-z';
+  order: 'freq' | 'length' | 'a-z';
+  direction: 'asc' | 'desc',
   page: `${number}`;
 }
 
@@ -18,43 +19,41 @@ export function Pattern() {
   let
     currentPattern: PatternAttrs['pattern'] = '',
     currentOrder: PatternAttrs['order'] | undefined,
+    currentDirection: PatternAttrs['direction'],
     dictionarySize: number = 0,
     loading = true,
     working = false,
     matches: string[] = [];
 
   function updateMatches(vnode: m.VnodeDOM<PatternAttrs>) {
-    let { pattern, order } = vnode.attrs;
-    if (pattern === currentPattern && order === currentOrder) return;
+    let { pattern, order, direction } = vnode.attrs;
+    if (pattern === currentPattern && order === currentOrder && direction === currentDirection) return;
 
     currentPattern = pattern;
     currentOrder = order;
+    currentDirection = direction;
 
     working = true;
     matches = [];
     m.redraw();
 
     setTimeout(async () => {
-      if (pattern) matches = await wordsMatchingPattern(pattern, order);
+      if (pattern) matches = await wordsMatchingPattern(pattern, order, direction);
       working = false;
       m.redraw();
     }, 0);
   }
 
-  function orderRadio(value: string, label: string) {
-    return m('dd', m('label',
+  function orderRadio(order: string, direction: string, label: string, params: Record<string, any>) {
+    return m('label',
       m('input', {
         type: 'radio',
         name: 'order',
-        value,
-        checked: currentOrder === value,
-        onchange: (e: { currentTarget: HTMLInputElement; }) => {
-          const { value } = e.currentTarget;
-          m.route.set('/pattern/:pattern/:order/1', { pattern: currentPattern || emptyValue, order: value });
-        }
+        checked: currentOrder === order && currentDirection === direction,
+        onchange: () => m.route.set('/pattern/:pattern/:order/:direction/:page', { ...params, order, direction, page: 1 })
       }),
       label
-    ));
+    );
   }
 
   function paginationControls(page: number, lastPage: number, linkFn: (page: number) => m.Vnode<any, any>) {
@@ -80,7 +79,7 @@ export function Pattern() {
         lastOnPage = Math.min(firstOnPage + itemsPerPage - 1, matches.length),
         pagination = () => paginationControls(page, lastPage,
           p => m(m.route.Link, {
-            href: '/pattern/:pattern/:order/:page',
+            href: '/pattern/:pattern/:order/:direction/:page',
             selector: p === page ? 'a.current' : 'a',
             params: { ...vnode.attrs, page: p },
           }, String(p))
@@ -103,31 +102,31 @@ export function Pattern() {
                   value: pattern,
                   onchange: (e: { currentTarget: HTMLInputElement; }) => {
                     const { value } = e.currentTarget;
-                    m.route.set('/pattern/:pattern/:order/1', { pattern: value, order: currentOrder });
+                    m.route.set('/pattern/:pattern/:order/:direction/1', { ...vnode.attrs, pattern: value });
                   }
                 }),
                 m('button', 'Find'),
-                m('dl.instructions',
-                  m('dt', 'Wildcards'),
-                  m('dd', m.trust(`Use <span class="letter">.</span> or <span class="letter">?</span> for each unknown letter`)),
-                  m('dd', m.trust(`Use <span class="letter">*</span> for any number of unknowns`)),
+                m('.instructions',
+                  m('h4', 'Wildcards'),
+                  m('div', m.trust(`Use <span class="letter">.</span> or <span class="letter">?</span> for each unknown letter`)),
+                  m('div', m.trust(`Use <span class="letter">*</span> for any number of unknowns`)),
                 ),
-                m('dl.order',
-                  m('dt', 'Show first'),
-                  orderRadio('common', ' Commonest words'),
-                  orderRadio('short', ' Shortest words'),
-                  orderRadio('a-z', ' A – Z')
+                m('.order',
+                  m('h4', 'Show first'),
+                  m('div', orderRadio('freq', 'desc', ' Common words', vnode.attrs), orderRadio('freq', 'asc', ' Obscure words', vnode.attrs)),
+                  m('div', orderRadio('length', 'asc', ' Short words', vnode.attrs), orderRadio('length', 'desc', ' Long words', vnode.attrs)),
+                  m('div', orderRadio('a-z', 'asc', ' A – Z', vnode.attrs), orderRadio('a-z', 'desc', ' Z – A', vnode.attrs)),
                 ),
                 m('.message',
                   !pattern ? ['Please enter a search pattern above (',
-                    m(m.route.Link, { href: '/pattern/p.tt*/common/1' }, m.trust('see&nbsp;example')), ')'] :
+                    m(m.route.Link, { href: '/pattern/p.tt*/freq/desc/1' }, m.trust('see&nbsp;example')), ')'] :
                     working ? 'Searching ...' :
                       matches.length ? `${stringWithCommas(matches.length)} matching words found` +
                         (matches.length > itemsPerPage ? ` (showing ${stringWithCommas(firstOnPage)} – ${stringWithCommas(lastOnPage)})` : '') :
                         'No matching words found'),
                 pagination(),
                 m('.matches', matches.slice(firstOnPage, lastOnPage).map(r =>
-                  m('a.match', { href: `https://www.google.com/search?q=${r}+definition`, target: '_blank' }, r)
+                  m('a.match', { href: `https://www.google.com/search?q="${r}"+definition`, target: '_blank' }, r)
                 )),
                 pagination(),
               ),

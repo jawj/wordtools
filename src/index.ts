@@ -31,8 +31,8 @@ const
       m('.anagram')
   };
 
-m.route(document.body, '/pattern/-/common/1', {
-  '/pattern/:pattern/:order/:page': Pattern,
+m.route(document.body, '/pattern/-/freq/desc/1', {
+  '/pattern/:pattern/:order/:direction/:page': Pattern,
   '/anagram': anagram,
 });
 

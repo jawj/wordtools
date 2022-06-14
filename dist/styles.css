@@ -1,7 +1,12 @@
 body {
-  font: 20px/26px 'Source Sans Pro', sans-serif;
+  font: 20px/1.4 'Source Sans Pro', sans-serif;
   margin: 4vh 6vw;
   color: #333;
+}
+
+h1,
+h2 {
+  line-height: 1.1;
 }
 
 .instructions {
@@ -89,13 +94,17 @@ button {
   color: #fff;
 }
 
-dt {
-  font-weight: bold;
+h4 {
   margin: 1.5ex 0 .5ex;
 }
 
-dd {
-  margin-bottom: .25ex;
+.instructions div,
+.order div {
+  margin-left: 3ex;
+}
+
+label {
+  margin-right: 1ex;
 }
 
 .message {
@@ -115,7 +124,7 @@ dd {
 
 .letter {
   display: inline-block;
-  padding: .1ex .75ex .15ex;
+  padding: 0 .75ex .05ex;
   border-radius: 1ex;
   background: #eee;
 }
