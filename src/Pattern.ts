@@ -41,7 +41,7 @@ export function Pattern() {
       if (pattern) matches = await wordsMatchingPattern(pattern, order, direction);
       working = false;
       m.redraw();
-    }, 0);
+    }, 100);
   }
 
   function orderRadio(order: string, direction: string, label: string, params: Record<string, any>) {
