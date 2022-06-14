@@ -57,11 +57,6 @@ export function Pattern() {
     ));
   }
 
-  function showExample() {
-    m.route.set('/pattern/p.tt*/common/1');
-    return false;
-  };
-
   function paginationControls(page: number, lastPage: number, linkFn: (page: number) => m.Vnode<any, any>) {
     return lastPage > 1 && m('.pagination',
       [1, page - 1, page, page + 1, lastPage]
@@ -125,7 +120,7 @@ export function Pattern() {
                 ),
                 m('.message',
                   !pattern ? ['Please enter a search pattern above (',
-                    m('a', { href: '#', onclick: showExample }, m.trust('see&nbsp;example')), ')'] :
+                    m(m.route.Link, { href: '/pattern/p.tt*/common/1' }, m.trust('see&nbsp;example')), ')'] :
                     working ? 'Searching ...' :
                       matches.length ? `${stringWithCommas(matches.length)} matching words found` +
                         (matches.length > itemsPerPage ? ` (showing ${stringWithCommas(firstOnPage)} – ${stringWithCommas(lastOnPage)})` : '') :
