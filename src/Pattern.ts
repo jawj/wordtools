@@ -6,7 +6,7 @@ import wordsMatchingPattern from './wordsMatchingPattern';
 
 const
   emptyValue = '-',
-  itemsPerPage = 1000;
+  itemsPerPage = 5000;
 
 interface PatternAttrs {
   pattern: string | undefined;
@@ -83,7 +83,19 @@ export function Pattern() {
             selector: p === page ? 'a.current' : 'a',
             params: { ...vnode.attrs, page: p },
           }, String(p))
-        );
+        ),
+        example = (pattern: string, orderDir = 'freq/desc') => m(m.route.Link, { href: `/pattern/${pattern}/${orderDir}/1` }, pattern),
+        rURL = 'http://economicspsychologypolicy.blogspot.com/2013/10/lecture-summary-judgement-heuristics.html',
+        examples = [
+          m('h4', 'Examples'),
+          m('ul',
+            m('li', example('...s.w.r.')),
+            m('li', example('*tz')),
+            m('li', example('*a*e*i*o*u*', 'length/asc'), ' (shortest words with all vowels in order)'),
+            m('li', example('*', 'length/desc'), ' (longest words)'),
+            m('li', example('r..*'), ' and ', example('..r*'), ' (words of 3+ letters with ', m('a', { href: rURL }, 'R first vs. R third'), ')'),
+          )
+        ];
 
       return m('.page',
         m(Nav),
@@ -118,12 +130,12 @@ export function Pattern() {
                   m('div', orderRadio('a-z', 'asc', ' A – Z', vnode.attrs), orderRadio('a-z', 'desc', ' Z – A', vnode.attrs)),
                 ),
                 m('.message',
-                  !pattern ? ['Please enter a search pattern above (',
-                    m(m.route.Link, { href: '/pattern/p.tt*/freq/desc/1' }, m.trust('see&nbsp;example')), ')'] :
+                  !pattern ? 'Please enter a search pattern above' :
                     working ? 'Searching ...' :
                       matches.length ? `${stringWithCommas(matches.length)} words found` +
                         (matches.length > itemsPerPage ? ` (showing ${stringWithCommas(firstOnPage)} – ${stringWithCommas(lastOnPage)})` : '') :
                         'No matching words found'),
+                !pattern && examples,
                 pagination(),
                 m('.matches', matches.slice(firstOnPage, lastOnPage).map(r =>
                   m('a.match', { href: `https://www.google.com/search?q="${r}"+definition`, target: '_blank' }, r)

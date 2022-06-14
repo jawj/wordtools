@@ -27,6 +27,7 @@ h2 {
 
 a {
   color: #77f;
+  text-decoration: none;
 }
 
 .pagination {
@@ -39,7 +40,6 @@ a {
   padding: .4ex 1.2ex;
   margin: 0 .6ex;
   border: 1px solid #77f;
-  text-decoration: none;
 }
 
 .pagination a.current {
@@ -119,7 +119,6 @@ label {
   letter-spacing: .05ex;
   margin: .25ex .75ex .25ex 0;
   color: inherit;
-  text-decoration: none;
 }
 
 .letter {
