@@ -20,13 +20,32 @@ body {
   margin: 1ex 0 0;
 }
 
-.navigation {
-  margin: 2ex 0 0;
+a {
+  color: #77f;
+}
+
+.pagination {
+  margin: 2ex 0;
   text-align: center;
 }
 
-.navigation a {
+.pagination a {
+  display: inline-block;
+  padding: .4ex 1.2ex;
+  margin: 0 .6ex;
+  border: 1px solid #77f;
   text-decoration: none;
+}
+
+.pagination a.current {
+  color: #fff;
+  background: #77f;
+}
+
+.pagination .ellipsis {
+  display: inline-block;
+  padding: 0 1.2ex;
+  margin: 0 5px;
 }
 
 .credits {

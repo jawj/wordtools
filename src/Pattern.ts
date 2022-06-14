@@ -50,7 +50,7 @@ export function Pattern() {
         checked: currentOrder === value,
         onchange: (e: { currentTarget: HTMLInputElement; }) => {
           const { value } = e.currentTarget;
-          m.route.set('/pattern/:pattern/:order/0', { pattern: currentPattern || emptyValue, order: value });
+          m.route.set('/pattern/:pattern/:order/1', { pattern: currentPattern || emptyValue, order: value });
         }
       }),
       label
@@ -58,17 +58,38 @@ export function Pattern() {
   }
 
   function showExample() {
-    m.route.set('/pattern/p.tt*/common/0');
+    m.route.set('/pattern/p.tt*/common/1');
     return false;
   };
+
+  function paginationControls(page: number, lastPage: number, linkFn: (page: number) => m.Vnode<any, any>) {
+    return lastPage > 1 && m('.pagination',
+      [1, page - 1, page, page + 1, lastPage]
+        .filter(p => p >= 1 && p <= lastPage)
+        .filter((p, i, arr) => p !== arr[i - 1])
+        .reduce((memo: m.Vnode[], p, i, arr) => {
+          if (i > 0 && arr[i - 1] !== p - 1) memo.push(m('span.ellipsis', m.trust('&hellip;')));
+          memo.push(linkFn(p));
+          return memo;
+        }, [])
+    );
+  }
 
   return {
     view: (vnode: m.Vnode<PatternAttrs>) => {
       const
         pattern = vnode.attrs.pattern === emptyValue ? '' : vnode.attrs.pattern,
         page = parseInt(vnode.attrs.page, 10),
-        firstOnPage = page * itemsPerPage,
-        lastOnPage = firstOnPage + itemsPerPage;
+        lastPage = Math.ceil(matches.length / itemsPerPage),
+        firstOnPage = (page - 1) * itemsPerPage,
+        lastOnPage = Math.min(firstOnPage + itemsPerPage - 1, matches.length),
+        pagination = () => paginationControls(page, lastPage,
+          p => m(m.route.Link, {
+            href: '/pattern/:pattern/:order/:page',
+            selector: p === page ? 'a.current' : 'a',
+            params: { ...vnode.attrs, page: p },
+          }, String(p))
+        );
 
       return m('.page',
         m(Nav),
@@ -87,7 +108,7 @@ export function Pattern() {
                   value: pattern,
                   onchange: (e: { currentTarget: HTMLInputElement; }) => {
                     const { value } = e.currentTarget;
-                    m.route.set('/pattern/:pattern/:order/0', { pattern: value, order: currentOrder });
+                    m.route.set('/pattern/:pattern/:order/1', { pattern: value, order: currentOrder });
                   }
                 }),
                 m('button', 'Find'),
@@ -107,38 +128,20 @@ export function Pattern() {
                     m('a', { href: '#', onclick: showExample }, m.trust('see&nbsp;example')), ')'] :
                     working ? 'Searching ...' :
                       matches.length ? `${stringWithCommas(matches.length)} matching words found` +
-                        (matches.length > itemsPerPage ? ` (showing ${stringWithCommas(firstOnPage)} – ${stringWithCommas(lastOnPage - 1)})` : '') :
+                        (matches.length > itemsPerPage ? ` (showing ${stringWithCommas(firstOnPage)} – ${stringWithCommas(lastOnPage)})` : '') :
                         'No matching words found'),
+                pagination(),
                 m('.matches', matches.slice(firstOnPage, lastOnPage).map(r =>
                   m('a.match', { href: `https://www.google.com/search?q=${r}+definition`, target: '_blank' }, r)
                 )),
-                m('.navigation',
-                  page > 0 && m('a.prev', {
-                    href: '#',
-                    onclick: () => {
-                      m.route.set('/pattern/:pattern/:order/:page', { ...vnode.attrs, page: page - 1 });
-                      window.scrollTo(0, 0);
-                      return false;
-                    }
-                  }, m.trust('&laquo; Previous')),
-                  m.trust(' &nbsp; '),
-                  lastOnPage < matches.length && m('a.next', {
-                    href: '#',
-                    onclick: () => {
-                      m.route.set('/pattern/:pattern/:order/:page', { ...vnode.attrs, page: page + 1 });
-                      window.scrollTo(0, 0);
-                      return false;
-                    }
-                  }, m.trust('Next &raquo;'))
-                )
+                pagination(),
               ),
-              m('.credits', m.trust(`We use a dictionary of ${stringWithCommas(dictionarySize)} names and English word
-s derived from 
-            <a href="http://aspell.net/">aspell</a>,
-            <a href="http://web.mit.edu/freebsd/head/share/dict/">web2</a>,
-            <a href="https://en.wikpedia.org">Wikipedia</a> and
-            <a href="http://crr.ugent.be/archives/2045">Brysbaert et al.</a>.
-            Many of these aren't valid in word games.`))
+              m('.credits', m.trust(`We use a dictionary of ${stringWithCommas(dictionarySize)} names and English words derived from 
+                <a href="http://aspell.net/">aspell</a>,
+                <a href="http://web.mit.edu/freebsd/head/share/dict/">web2</a>,
+                <a href="https://en.wikpedia.org">Wikipedia</a> and
+                <a href="http://crr.ugent.be/archives/2045">Brysbaert et al</a>.
+                Many of these aren't valid in word games.`))
             )
         ));
     },
