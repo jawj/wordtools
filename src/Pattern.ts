@@ -90,10 +90,13 @@ export function Pattern() {
         examples = [
           m('h4', 'Examples'),
           m('ul',
-            m('li', example('...s.w.r.'), ', ', example('*tz'), ' or ', example('*sh.p*sh.p*')),
+            m('li', example('...s.w.r.'), ', ', example('*tz'), ', ', example('*yx'), ' or ', example('*sh.p*sh.p*')),
             m('li', example('*a*e*i*o*u*', 'length/asc'), ' (shortest words with all vowels in order)'),
-            m('li', example('r..*'), ' and ', example('..r*'), ' (words of 3+ letters with ', m('a', { href: rURL, target: '_blank' }, 'R first vs. R third'), ')'),
+            m('li', example('r..*'), ' and ', example('..r*'), ' (words of 3+ letters with ',
+              m('a', { href: rURL, target: '_blank' }, 'R first vs. R third'), ')'),
             m('li', example('*', 'length/desc'), ' (longest words)'),
+            m('li', example('~(....)\\1'), ' or ', example('~q[^u]'), ' (prefix ', m('span.letter', '~'), ' to use ',
+              m('a', { href: 'https://cs.lmu.edu/~ray/notes/regex/', target: '_blank' }, 'regular expressions)')),
           )
         ];
 
