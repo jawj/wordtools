@@ -95,8 +95,8 @@ export function Pattern() {
             m('li', example('r..*'), ' and ', example('..r*'), ' (words of 3+ letters with ',
               m('a', { href: rURL, target: '_blank' }, 'R first vs. R third'), ')'),
             m('li', example('*', 'length/desc'), ' (longest words)'),
-            m('li', example('~(....)\\1'), ' or ', example('~q[^u]'), ' (prefix ', m('span.letter', '~'), ' to use ',
-              m('a', { href: 'https://cs.lmu.edu/~ray/notes/regex/', target: '_blank' }, 'regular expressions)')),
+            m('li', example('~(....)\\1'), ' or ', example('~q[^u]'), ' or ', example('~[aeiou]{4}$'), ' (prefix ', m('span.letter', '~'), ' to use a ',
+              m('a', { href: 'https://cs.lmu.edu/~ray/notes/regex/', target: '_blank' }, 'regex'), ')'),
           )
         ];
 
