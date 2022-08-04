@@ -103,12 +103,11 @@ export function Pattern() {
           m('h4', 'Examples'),
           m('ul',
             m('li', example('...s.w.r.'), ', ', example('*tz'), ', ', example('*yx'), ' or ', example('*sh.p*sh.p*')),
-            m('li', example('*a*e*i*o*u*', 'length/asc'), ' (shortest words with all vowels in order)'),
-            m('li', example('r..*'), ' and ', example('..r*'), ' (words of 3+ letters with ',
+            m('li', example('*a*e*i*o*u*', 'length/asc'), ' (shortest with all vowels in order)'),
+            m('li', example('r..*'), ' and ', example('..r*'), ' (3+ letters with ',
               m('a', { href: rURL, target: '_blank' }, 'R first vs. R third'), ')'),
-            m('li', example('*', 'length/desc'), ' (longest words)'),
-            m('li', example('~(....)\\1'), ', ', example('~q[^u]'), ' or ', example('~[aeiou]{4}$'), ' (prefix ', m('span.letter', '~'), ' to use a ',
-              m('a', { href: 'https://cs.lmu.edu/~ray/notes/regex/', target: '_blank' }, 'regex'), ')'),
+            m('li', example('*', 'length/desc'), ' (longest)'),
+            m('li', example('~(....)\\1'), ', ', example('~q([^u]|$)'), ' or ', example('~[aeiou]{4}$')),
           )
         ];
 
@@ -137,6 +136,7 @@ export function Pattern() {
                   m('h4', 'Wildcards'),
                   m('div', m.trust(`Use <span class="letter">.</span> or <span class="letter">?</span> for each unknown letter`)),
                   m('div', m.trust(`Use <span class="letter">*</span> for any number of unknowns`)),
+                  m('div', m.trust(`(Advanced: prefix <span class="letter">~</span> to use a <a href="https://cs.lmu.edu/~ray/notes/regex/" target="_blank">regex</a>)`)),
                 ),
                 m('.order',
                   m('h4', 'Show first'),
