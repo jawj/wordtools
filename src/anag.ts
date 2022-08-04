@@ -4,8 +4,6 @@ import { getWordWeights, standardise } from './words';
 type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
 
 const alphabetise = (s: string) => s.split('').sort().join('');
-const wait = (delayMs: number) => new Promise(resolve => setTimeout(resolve, delayMs));
-
 
 // setup
 
@@ -67,8 +65,10 @@ export function* comboMasksWithDupeMasks(n: number, dupeMasks: DupeMask[], index
     break;
   }
 
-  if (!isDupe) yield current;
-  for (let i = index + 1; i < n; i++) yield* comboMasksWithDupeMasks(n, dupeMasks, i, current | (1 << i));
+  if (!isDupe) {
+    yield current;
+    for (let i = index + 1; i < n; i++) yield* comboMasksWithDupeMasks(n, dupeMasks, i, current | (1 << i));
+  }
 }
 
 export function splitStringUsingMask(s: string, mask: number) {
@@ -97,7 +97,7 @@ export async function findAnagrams(
   minWords: number,
   maxWords: number,
   reportEvery: number,
-  progressListener: (currentResults: string[][], combosTried: number) => boolean,
+  progressListener: (combosTried: number, length: number, latest: string | undefined) => boolean,
 ) {
   combosTried = 0;
 
@@ -119,7 +119,7 @@ async function _findAnagrams(
   minWords: number,
   maxWords: number,
   reportEvery: number,
-  progressListener: (currentResults: string[][], combosTried: number) => boolean,
+  progressListener: (combosTried: number, length: number, latest: string | undefined) => boolean,
   hash: Awaited<ReturnType<typeof getHash>>,
   results: string[][] = [],
   priorWords: string[][] = [],
@@ -144,13 +144,19 @@ async function _findAnagrams(
       if (!words1) continue;
 
       // progress reporting + aborting
-      const now = Date.now();
-      if (now > status.nextReport) {
-        const carryOn = progressListener(results, combosTried);
-        if (!carryOn) return results;  // abort
+      if (combosTried % 100 === 0) {
+        const now = Date.now();
+        if (now > status.nextReport) {
+          const
+            { length } = results,
+            latest = length > 0 ? results[length - 1].join(' ') : undefined,
+            carryOn = await progressListener(combosTried, length, latest);
 
-        await wait(0);
-        status.nextReport = now + reportEvery;
+          if (!carryOn) return results;  // abort
+
+          //await wait(0);
+          status.nextReport = now + reportEvery;
+        }
       }
 
       const currentWords = [];

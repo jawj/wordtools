@@ -8,6 +8,8 @@
       "es2019",
       "dom"
     ],
+    "module": "es2020",
+    "moduleResolution": "node",
     "strict": true,
     "sourceMap": true,
     "forceConsistentCasingInFileNames": true,

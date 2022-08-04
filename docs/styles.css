@@ -54,12 +54,19 @@ a {
 }
 
 .credits {
-  font-size: 12px;
-  line-height: 16px;
-  margin: 5ex 0;
+  margin: 40px 0 0;
+  color: #aaa;
 }
 
-.credits a {
+.copyright {
+  margin: 25px 0 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: #aaa;
+}
+
+.credits a,
+.copyright a {
   color: inherit;
   text-decoration: underline;
 }

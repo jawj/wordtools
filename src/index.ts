@@ -1,29 +1,17 @@
 
 import m from 'mithril';
-
-import { findAnagrams } from './anag';
 import { Pattern } from './Pattern';
 
-declare global {
-  interface Window {
-    anags: any;
-  }
-}
+// import * as comlink from 'comlink';
+// import type { WorkerAPI } from './combined.worker';
 
-window.addEventListener('load', async () => {
+// st w = comlink.wrap<WorkerAPI>(new Worker(new URL('./combined.worker', import.meta.url)));
 
-  const t0 = Date.now();
-  const anagrams = await findAnagrams('lieselotte goulden', 1, 2, 1000, (currentResults, combosTried) => {
-    window.anags = currentResults;
-    const { length } = currentResults;
-    console.log(length, combosTried, currentResults[currentResults.length - 1]?.join(' '));
-    return length < 1000000;
-  });
-  console.log('anagrams', anagrams.map(arr => arr.join(' ')));
-  console.log(Date.now() - t0);
-
-});
-
+// w.findAnagrams('georgejamesmackerron', 3, 5, 1000,
+//   comlink.proxy((...args) => {
+//     console.log(...args);
+//     return true;
+//   })).then(x => console.log(x));
 
 const
   anagram = {
@@ -31,7 +19,7 @@ const
       m('.anagram')
   };
 
-m.route(document.body, '/pattern/-/freq/desc/1', {
+m.route(document.getElementById('main')!, '/pattern/-/freq/desc/1', {
   '/pattern/:pattern/:order/:direction/:page': Pattern,
   '/anagram': anagram,
 });
