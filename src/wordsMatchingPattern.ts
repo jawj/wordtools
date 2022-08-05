@@ -12,7 +12,8 @@ interface Cache {
 
 let cache: Cache | undefined;
 
-async function wordsMatchingPattern(pattern: string) {
+async function matches(pattern: string) {
+
   const
     isRe = pattern.startsWith('~'),
     standardisedPattern = isRe ? pattern : pattern.toLowerCase().replace(/[^a-z.?*]/g, ''),
@@ -32,9 +33,9 @@ export default async function (
   maxResults: number,
 ) {
   const results = cache?.pattern === pattern ? cache.results :
-    await wordsMatchingPattern(pattern);
+    await matches(pattern);
 
-  if (cache?.order !== order) {
+  if (cache?.pattern !== pattern || cache.order !== order) {
     const
       wordWeights = await getWordWeights(),
       sortSign = direction === 'asc' ? 1 : -1;
@@ -44,10 +45,9 @@ export default async function (
         order === 'length' ? (a, b) => sortSign * ((a.length - b.length) || wordWeights[b] - wordWeights[a]) :
           (a, b) => sortSign * a.localeCompare(b));
 
-  } else /* order if the same but */ if (cache.direction !== direction) {
+  } else if ( /* pattern and order are the same but */ cache.direction !== direction) {
     results.reverse();
-
-  } // else order and direction are the same: no sorting required
+  }
 
   cache = { pattern, order, direction, results };
 
