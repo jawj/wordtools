@@ -99,18 +99,18 @@ export function Pattern() {
         example = (pattern: string, orderDir = 'freq/desc') =>
           m(m.route.Link, { href: `/pattern/${encodeURIComponent(pattern)}/${orderDir}/1`, selector: 'a.example' }, pattern),
         rURL = 'http://economicspsychologypolicy.blogspot.com/2013/10/lecture-summary-judgement-heuristics.html',
+        nbspdash = m.trust(' —&nbsp;'),
         examples = [
           m('h4', 'Examples'),
           m('ul',
             m('li', example('...s.w.r.'), ', ', example('*tz'), ', ', example('*yx'), ' or ', example('*sh.p*sh.p*')),
-            m('li', example('*a*e*i*o*u*', 'length/asc'), ' — shortest with all vowels in order'),
-            m('li', example('r..*'), ' and ', example('..r*'), ' — 3+ letters, ',
-              m('a', { href: rURL, target: '_blank' }, 'R first vs. R third')),
-            m('li', example('*', 'length/desc'), ' — longest'),
-            m('li', example('~(.{4,})\\1'), ' — 4+ letters repeating'),
-            m('li', example('~q([^u]|$)'), ' — q not followed by u'),
-            m('li', example('~[aeiou]{4}$'), ' — 4 vowels at end'),
-            m('li', example('~^(.)(.?)(.?)(.?).?\\4\\3\\2\\1$', 'length/desc'), ' — palindromes'),
+            m('li', example('*a*e*i*o*u*', 'length/asc'), nbspdash, 'all vowels in order'),
+            m('li', example('r..*'), ' and ', example('..r*'), nbspdash, m('a', { href: rURL, target: '_blank' }, 'r first vs. r third')),
+            m('li', example('*', 'length/desc'), nbspdash, 'longest'),
+            m('li', example('~q([^u]|$)'), nbspdash, 'q, not u'),
+            m('li', example('~[aeiou]{4}$'), nbspdash, '4 vowels at end'),
+            m('li', example('~(.{4,})\\1'), nbspdash, '4+ letters repeating'),
+            m('li', example('~^(.)(.?)(.?)(.?).?\\4\\3\\2\\1$', 'length/desc'), nbspdash, 'palindromes'),
           )
         ];
 
