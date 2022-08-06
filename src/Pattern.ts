@@ -107,6 +107,9 @@ export function Pattern() {
             m('li', example('*a*e*i*o*u*', 'length/asc'), nbspdash, 'all vowels in order'),
             m('li', example('r..*'), ' and ', example('..r*'), nbspdash, m('a', { href: rURL, target: '_blank' }, 'r first vs. r third')),
             m('li', example('*', 'length/desc'), nbspdash, 'longest'),
+          ),
+          m('h4', 'Advanced examples'),
+          m('ul',
             m('li', example('~q([^u]|$)'), nbspdash, 'q, not u'),
             m('li', example('~[aeiou]{4}$'), nbspdash, '4 vowels at end'),
             m('li', example('~(.{4,})\\1'), nbspdash, '4+ letters repeating'),
@@ -139,7 +142,7 @@ export function Pattern() {
                   m('h4', 'Wildcards'),
                   m('div', m.trust(`Use <span class="letter">.</span> or <span class="letter">?</span> for each unknown letter`)),
                   m('div', m.trust(`Use <span class="letter">*</span> for any number of unknowns`)),
-                  m('div', m.trust(`(Advanced: prefix <span class="letter">~</span> to use a <a href="https://cs.lmu.edu/~ray/notes/regex/" target="_blank">regex</a>)`)),
+                  m('div', m.trust(`<i>Advanced:</i> prefix <span class="letter">~</span> to use a <a href="https://cs.lmu.edu/~ray/notes/regex/" target="_blank">regex</a>`)),
                 ),
                 m('.order',
                   m('h4', 'Show first'),
@@ -150,15 +153,18 @@ export function Pattern() {
                 m('.message',
                   !pattern ? 'Please enter a search pattern above' :
                     working ? waitingMessage('Searching') :
-                      count > 0 ? `${stringWithCommas(count)} words found` +
-                        (count > itemsPerPage ? ` (showing ${stringWithCommas(firstOnPage)} – ${stringWithCommas(lastOnPage)})` : '') :
-                        'No matching words found'),
+                      count < 0 ? results[0] :
+                        count > 0 ? `${stringWithCommas(count)} words found` +
+                          (count > itemsPerPage ? ` (showing ${stringWithCommas(firstOnPage)} – ${stringWithCommas(lastOnPage)})` : '') :
+                          'No matching words found'),
                 !pattern && examples,
-                pagination(),
-                m('.matches', results.map(r =>
-                  m('a.match', { href: `https://www.google.com/search?q="${r}"+definition`, target: '_blank' }, r)
-                )),
-                pagination(),
+                count > 0 && working === false && [
+                  pagination(),
+                  m('.matches', results.map(r =>
+                    m('a.match', { href: `https://www.google.com/search?q="${r}"+definition`, target: '_blank' }, r)
+                  )),
+                  pagination(),
+                ],
               ),
               m('.credits', m.trust(`We use a dictionary of ${stringWithCommas(dictionarySize)} names and English words derived from 
                 <a href="http://aspell.net/">aspell</a>,

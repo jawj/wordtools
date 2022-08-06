@@ -13,7 +13,6 @@ interface Cache {
 let cache: Cache | undefined;
 
 async function matches(pattern: string) {
-
   const
     isRe = pattern.startsWith('~'),
     standardisedPattern = isRe ? pattern : pattern.toLowerCase().replace(/[^a-z.?*]/g, ''),
@@ -32,8 +31,15 @@ export default async function (
   firstIndex: number,
   maxResults: number,
 ) {
-  const results = cache?.pattern === pattern ? cache.results :
-    await matches(pattern);
+  let results;
+  try {
+    results = cache?.pattern === pattern ? cache.results : await matches(pattern);
+
+  } catch (e: any) {
+    results = [e.message];
+    cache = { pattern, order, direction, results };
+    return { count: -1, results };
+  }
 
   if (cache?.pattern !== pattern || cache.order !== order) {
     const
