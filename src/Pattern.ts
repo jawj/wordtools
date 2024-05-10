@@ -110,7 +110,8 @@ export function Pattern() {
           ),
           m('h4', 'Advanced examples'),
           m('ul',
-            m('li', example('~q([^u]|$)'), nbspdash, 'q, not u'),
+            m('li', example('~(^|[^c])ei'), nbspdash, 'i before e except after c, except …'),
+            m('li', example('~q([^u]|$)'), nbspdash, 'q, no u'),
             m('li', example('~[aeiou]{4}$'), nbspdash, '4 vowels at end'),
             m('li', example('~(.{4,})\\1'), nbspdash, '4+ letters repeating'),
             m('li', example('~^(.)(.?)(.?)(.?).?\\4\\3\\2\\1$', 'length/desc'), nbspdash, 'palindromes'),
@@ -138,6 +139,7 @@ export function Pattern() {
                   }
                 }),
                 m('button', 'Find'),
+                m('button.secondary', { onclick: () => m.route.set('/pattern/-/freq/desc/1') }, 'Clear'),
                 m('.instructions',
                   m('h4', 'Wildcards'),
                   m('div', m.trust(`Use <span class="letter">.</span> or <span class="letter">?</span> for each unknown letter`)),

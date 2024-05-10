@@ -1,12 +1,24 @@
 body {
   font: 20px/1.4 'Source Sans Pro', sans-serif;
   margin: 4vh 6vw;
+  background: #fff;
   color: #333;
 }
 
 h1,
 h2 {
   line-height: 1.1;
+}
+
+button {
+  cursor: pointer;
+  margin: 0 3px;
+}
+
+button.secondary {
+  background: transparent;
+  border: 1px solid #77f;
+  color: #77f;
 }
 
 .instructions {
