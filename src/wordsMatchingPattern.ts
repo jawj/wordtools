@@ -12,15 +12,29 @@ interface Cache {
 
 let cache: Cache | undefined;
 
+function makeRe(pattern: string) {
+  return new RegExp('^' + pattern.replace(/[*]/g, '.*').replace(/[?]/g, '.') + '$')
+}
+
 async function matches(pattern: string) {
   const
     isRe = pattern.startsWith('~'),
+    andBack = pattern.endsWith('<'),
     standardisedPattern = isRe ? pattern : pattern.toLowerCase().replace(/[^a-z.?*]/g, ''),
-    re = isRe ? new RegExp(pattern.slice(1), 'i') : new RegExp('^' + standardisedPattern.replace(/[*]/g, '.*').replace(/[?]/g, '.') + '$'),
-    wordWeights = await getWordWeights(),
-    results: string[] = [];
+    re = isRe ? new RegExp(standardisedPattern.slice(1), 'i') : makeRe(standardisedPattern),
+    wordWeights = await getWordWeights();
 
+  let results: string[] = [];
   for (const word in wordWeights) if (re.test(word)) results.push(word);
+
+  if (andBack) {
+    const backWords: Set<string> = new Set();
+    for (const word of results) backWords.add(word.split('').reverse().join(''));
+    const backResults: string[] = [];
+    for (const word in wordWeights) if (backWords.has(word)) backResults.push(word);
+    results = backResults;
+  }
+
   return results;
 }
 

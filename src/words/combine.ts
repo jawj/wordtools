@@ -52,9 +52,10 @@ const
 
     const wikiwc = wikiWordCounts[word];
     // console.log(4, wikiwc);
+
     if (wikiwc) weight += Math.log10(Math.max(10, wikiwc));
 
-    weight = parseFloat(weight.toFixed(2));
+    weight = parseFloat(weight.toFixed(1));
     return weight;
   },
 

@@ -1,174 +1,78 @@
 
-import { getWordWeights, standardise } from './words';
+type Letters = [string[], number[]];
+type Sides = [string, string][];
 
-type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
-
-const alphabetise = (s: string) => s.split('').sort().join('');
-
-// setup
-
-let hash: Record<string, string[]>;
-async function getHash() {
-  if (!hash) {
-    console.log('Generating anagram data structures ...');
-    hash = {};
-    const words = await getWordWeights();
-    for (const word in words) {
-      const alphabetical = alphabetise(word);
-      if (!hash[alphabetical]) hash[alphabetical] = [];
-      hash[alphabetical].push(word);
-    }
-    console.log('Generated');
+const toLetters = (s: string) => s.split('').sort().reduce((memo, x) => {
+  if (memo[0][0] === x) memo[1][0]++;
+  else {
+    memo[0].unshift(x);
+    memo[1].unshift(1);
   }
-  return hash;
-}
+  return memo;
+}, [[], []] as Letters);
 
-// splitting
+/**
+ * The Allocation data structure tracks every unique combination of letters.
+ * It's a Uint32Array. Each unique letter is represented by one array item.
+ * For each item, the high 16 bits record how many of that letter is available.
+ * The low 16 bits record how many of that letter is currently allocated to a
+ * specific side. The last item records how many combinations have been 
+ * produced, and the next-to-last records how many unique combinations exist.
+ */
 
-function bitCount(n: number) {
-  n = (n | 0) - ((n >>> 1) & 0x55555555);
-  n = (n & 0x33333333) + ((n >>> 2) & 0x33333333);
-  return ((n + (n >>> 4) & 0xF0F0F0F) * 0x1010101) >>> 24;
-}
-
-type DupeMask = [shift: number, mask: number];
-
-export function dupeMasksForString(s: string) {
-  const
-    dupeRe = /(.)\1+/g,
-    dupes: DupeMask[] = [];
-
-  let match;
-  while ((match = dupeRe.exec(s))) {
-    const
-      firstPos = match.index,
-      { length } = match[0];
-
-    dupes.push([firstPos, (1 << length) - 1]);
+function createAllocation(maxValues: number[]) {
+  const len = maxValues.length;
+  const mb = new Uint32Array(len + 2);
+  let product = 1, i = 0;
+  for (; i < len; i++) {
+    const max = maxValues[i];
+    mb[i] = max << 16;
+    product *= (max + 1);
   }
-
-  return dupes;
+  mb[i] = Math.ceil(product / 2);
+  return mb;
 }
 
-export function* comboMasksWithDupeMasks(n: number, dupeMasks: DupeMask[], index = -1, current = 0): Generator<number> {
-  if (index === n) return;
-
-  let isDupe = false;
-  for (const dm of dupeMasks) {
-    const masked = (current >> dm[0]) & dm[1];
-    if (masked === 0) continue;  // none of the repeated letters are present, so no issue
-
-    const canonical = (1 << bitCount(masked)) - 1;
-    if (masked === canonical) continue;  // repeated letters occur in canonical form, so no issue
-
-    isDupe = true;
-    break;
-  }
-
-  if (!isDupe) {
-    yield current;
-    for (let i = index + 1; i < n; i++) yield* comboMasksWithDupeMasks(n, dupeMasks, i, current | (1 << i));
-  }
-}
-
-export function splitStringUsingMask(s: string, mask: number) {
-  const cs: [string, string] = ['', ''];
-  for (let j = 0, len = s.length; j < len; j++) cs[mask & 1 << j ? 0 : 1] += s.charAt(j);
-  return cs;
-}
-
-export function* stringCombos(s: string) {  // s must be standardised and alphabetised
-  for (const mask of comboMasksWithDupeMasks(s.length, dupeMasksForString(s))) {
-    if (mask === 0) continue;  // don't yield the first empty string
-    const ss = splitStringUsingMask(s, mask);
-    if (ss[0] <= ss[1]) yield ss;
-  }
-}
-
-// anagrams
-
-export const anagramGoodness = (words: string[], wordWeights: Record<string, number>) =>
-  words.reduce((memo, word) => Math.min(memo, wordWeights[word]), Infinity);
-
-let combosTried = 0;
-
-export async function findAnagrams(
-  s: string,
-  minWords: number,
-  maxWords: number,
-  reportEvery: number,
-  progressListener: (combosTried: number, length: number, latest: string | undefined) => boolean,
-) {
-  combosTried = 0;
-
-  const
-    std = alphabetise(standardise(s)),
-    hash = await getHash(),
-    results = await _findAnagrams(std, minWords, maxWords, reportEvery, progressListener, hash),
-    wordWeights = await getWordWeights();
-
-  results.sort((a, b) =>
-    // a.length - b.length ||  // absolutely prefer fewer words
-    anagramGoodness(b, wordWeights) - anagramGoodness(a, wordWeights));
-
-  return results;
-}
-
-async function _findAnagrams(
-  s: string,
-  minWords: number,
-  maxWords: number,
-  reportEvery: number,
-  progressListener: (combosTried: number, length: number, latest: string | undefined) => boolean,
-  hash: Awaited<ReturnType<typeof getHash>>,
-  results: string[][] = [],
-  priorWords: string[][] = [],
-  status = { nextReport: Date.now() + reportEvery }
-) {
-
-  if (minWords <= 1) {
-    const singleWords = hash[s];
-    if (singleWords) {
-      for (const sw of singleWords) {
-        if (priorWords.length > 0) for (const pw of priorWords) results.push([...pw, sw]);
-        else results.push([sw]);
+function nextAllocation(mb: Uint32Array, debug = false) {
+  const len = mb.length - 2;
+  const stop = mb[len];
+  const total = ++mb[len + 1];
+  for (let i = 0; i < len; i++) {
+    const col = mb[i];
+    const max = col >>> 16;
+    const v = (col & 0xffff) + 1; // increment value
+    if (debug && i === len - 1) console.log('---');
+    if (v <= max) {
+      mb[i] = (max << 16) | v;
+      if (debug) {
+        if (total === stop) console.log('===');
+        return true;
       }
+      return total < stop;
     }
+    mb[i] = max << 16;  // v is implicitly zero 
   }
-
-  if (maxWords > 1) {
-    for (const [s1, s2] of stringCombos(s)) {
-      combosTried++;
-
-      const words1 = hash[s1];
-      if (!words1) continue;
-
-      // progress reporting + aborting
-      if (combosTried % 100 === 0) {
-        const now = Date.now();
-        if (now > status.nextReport) {
-          const
-            { length } = results,
-            latest = length > 0 ? results[length - 1].join(' ') : undefined,
-            carryOn = await progressListener(combosTried, length, latest);
-
-          if (!carryOn) return results;  // abort
-
-          //await wait(0);
-          status.nextReport = now + reportEvery;
-        }
-      }
-
-      const currentWords = [];
-      for (const w1 of words1) {
-        if (priorWords.length > 0) for (const pw of priorWords) currentWords.push([...pw, w1]);
-        else currentWords.push([w1]);
-      }
-
-      await _findAnagrams(s2, minWords - 1, maxWords - 1, reportEvery, progressListener, hash, results, currentWords, status);
-    }
-  }
-
-  return results;
+  if (debug) return false;
+  throw new Error('If we get here, we will have seen every combination twice');
 }
 
+function* splits(s: string) {
+  var [letters, counts] = toLetters(s);
+  var mb = createAllocation(counts);
+  const len = letters.length;
+  do {
+    let s1 = '', s2 = '';
+    for (let i = 0; i < len; i++) {
+      const letter = letters[i];
+      const col = mb[i];
+      const max = col >>> 16;
+      let v = col & 0xffff;
+      s1 += letter.repeat(v);
+      s2 += letter.repeat(max - v);
+    }
+    yield [s1, s2];
+  } while (nextAllocation(mb));
+}
+
+let i = 0;
+for (const [s1, s2] of splits('george')) console.log(++i, s1, s2);
