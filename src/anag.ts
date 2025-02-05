@@ -126,7 +126,7 @@ function goodness(words: string[]) {
 //for (const wordables of wordablesFromString('elvises')) console.log(wordables.map(w => wordsByWordable[w].join('/')));
 
 const anags = [];
-for (const wordables of wordablesFromString('louispotter')) {
+for (const wordables of wordablesFromString('louisepotter')) {
   const words = wordables.map(w => wordsByWordable[w]);
   for (const anag of combinations(words)) anags.push([anag, goodness(anag)] as const);
   // for (const anag of combinations(words)) {
