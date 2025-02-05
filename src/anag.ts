@@ -1,27 +1,14 @@
 import { getWordWeights } from './words';
 
-
-const alphabetise = (s: string) => s.split('').sort().join('');
-const last = (arr: any[]) => arr[arr.length - 1];
-const setLast = (arr: any[], v: any) => arr[arr.length - 1] = v;
-const incrLast = (arr: any[]) => arr[arr.length - 1]++;
-
-// setup
-
-let hash: Record<string, string[]>;
-async function getHash() {
-  if (!hash) {
-    console.log('Generating anagram data structures ...');
-    hash = {};
-    const words = await getWordWeights();
-    for (const word in words) {
-      const alphabetical = alphabetise(word);
-      if (!hash[alphabetical]) hash[alphabetical] = [];
-      hash[alphabetical].push(word);
-    }
-    console.log('Done');
+let wordsByWordable: Record<string, string[]>;
+async function makeHash() {
+  if (wordsByWordable) return;
+  wordsByWordable = {};
+  for (const word in await getWordWeights()) {
+    const wordable = word.split('').sort().join('');
+    wordsByWordable[wordable] ??= [];
+    wordsByWordable[wordable].push(word);
   }
-  return hash;
 }
 
 type LetterCount = [string[], number[]];
@@ -71,18 +58,18 @@ function nextAllocation(mb: Uint32Array, debug = false) {
     const col = mb[i];
     const max = col >>> 16;
     const v = (col & 0xffff) + 1; // increment value
-    if (debug && i === len - 1) console.log('---');
+    // if (debug && i === len - 1) console.log('---');
     if (v <= max) {
       mb[i] = (max << 16) | v;
-      if (debug) {
-        if (comboIndex === comboTotal) console.log('===');
-        return true;
-      }
+      // if (debug) {
+      //   if (comboIndex === comboTotal) console.log('===');
+      //   return true;
+      // }
       return comboIndex < comboTotal;
     }
     mb[i] = max << 16;  // v is implicitly zero 
   }
-  if (debug) return false;
+  // if (debug) return false;
   throw new Error('If we get here, we will have seen every combination twice');
 }
 
@@ -106,14 +93,13 @@ function* splitsFromString(s: string) {
 
 function* wordablesFromString(s: string, kept: string[] = []): Generator<string[]> {
   for (const [keep, splitAgain] of splitsFromString(s)) {
-    if (!hash[keep]) continue;  // keep only letters that can make words
-
-    const sets = [...kept, keep];
-    if (splitAgain === '') yield sets;
-    else yield* wordablesFromString(splitAgain, sets);
+    if (!wordsByWordable[keep]) continue;  // keep only letters that can make words
+    const wordables = [...kept, keep];
+    if (splitAgain === '') yield wordables;
+    else yield* wordablesFromString(splitAgain, wordables);
   }
 }
 
 
-await getHash();
-for (const wordables of wordablesFromString('elvis')) console.log(wordables.map(w => hash[w].join('/')));
+await makeHash();
+for (const wordables of wordablesFromString('elvises')) console.log(wordables.map(w => wordsByWordable[w].join('/')));
