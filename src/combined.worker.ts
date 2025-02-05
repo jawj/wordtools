@@ -2,12 +2,11 @@
 import * as comlink from 'comlink';
 
 import wordsMatchingPattern from './wordsMatchingPattern';
-import { findAnagrams } from './anag';
+//import { findAnagrams } from './anag';
 import { loadWordWeights, getWordsCount } from './words';
 
 const workerAPI = {
   wordsMatchingPattern,
-  findAnagrams,
   loadWordWeights,
   getWordsCount,
 };

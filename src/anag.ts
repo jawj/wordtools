@@ -1,8 +1,15 @@
-import { getWordWeights } from './words';
+import { getWordWeights, standardise } from './words';
 
+const last = (arr: any[]) => arr[arr.length - 1];
+
+/**
+ * A wordable is an alphabetically-ordered sequence of letters which can be
+ * rearranged to form one or more words.
+ */
 
 let wordsByWordable: Record<string, string[]>;
-function makeHash(wordWeights: Awaited<ReturnType<typeof getWordWeights>>) {
+
+function makeWordsByWordable(wordWeights: Awaited<ReturnType<typeof getWordWeights>>) {
   if (wordsByWordable) return;
   wordsByWordable = {};
   for (const word in wordWeights) {
@@ -13,12 +20,13 @@ function makeHash(wordWeights: Awaited<ReturnType<typeof getWordWeights>>) {
 }
 
 const wordWeights = await getWordWeights();
-makeHash(wordWeights);
+makeWordsByWordable(wordWeights);
 
 
 type LetterCount = [string[], number[]];
-function countLetters(s: string) {
-  const rawLetters = s.split('').sort();
+
+function countLetters(word: string) {
+  const rawLetters = word.split('').sort();
   const letters: string[] = [];
   const counts: number[] = [];
   let prevLetter: string | undefined;
@@ -72,6 +80,11 @@ function nextAllocation(alloc: Uint32Array) {
   throw new Error('This should be impossible');
 }
 
+/**
+ * This generator yields every possible unique way to produce two strings from
+ * the letters of the string provided. The second string returned may be empty,
+ * but the first never is (if a non-zero length string is provided).
+ */
 function* splitsFromString(s: string) {
   var [letters, counts] = countLetters(s);
   var mb = createAllocation(counts);
@@ -90,6 +103,11 @@ function* splitsFromString(s: string) {
   } while (nextAllocation(mb));
 }
 
+
+/**
+ * This generator yields every possible unique combination of wordables from
+ * the letters of the string provided.
+ */
 function* wordablesFromString(s: string, kept: string[] = []): Generator<string[]> {
   for (const [keep, splitAgain] of splitsFromString(s)) {
     if (!wordsByWordable[keep]) continue;  // keep only letters that can make words
@@ -99,6 +117,10 @@ function* wordablesFromString(s: string, kept: string[] = []): Generator<string[
   }
 }
 
+/**
+ * This generator yields every possible combination of the strings in the
+ * arrays it's given, much like a FULL JOIN in SQL.
+ */
 function* combinations(s: string[][]) {
   const lengths = s.map(s => s.length);
   const indices = s.map(() => 0);
@@ -113,25 +135,47 @@ function* combinations(s: string[][]) {
   }
 }
 
-function goodness(words: string[]) {
+function goodnessFromWords(words: string[]) {
   // start with weight of lowest-weighed word, after adjusting weight to give a slight preference for longer words
-  const min = words.reduce((memo, word) => {
-    const adjustedWeight = wordWeights[word] + .1 * word.length;
+  const lowestAdjustedWeight = words.reduce((memo, word) => {
+    const adjustedWeight = wordWeights[word] + .01 * word.length;
     return memo < adjustedWeight ? memo : adjustedWeight;
   }, Infinity);
-  // adjust with a strong preference for fewer words in total
-  return min / Math.pow(words.length, 3);
+
+  // apply a preference for fewer words in total
+  return lowestAdjustedWeight / words.length ** 2.5;
 }
 
-//for (const wordables of wordablesFromString('elvises')) console.log(wordables.map(w => wordsByWordable[w].join('/')));
 
-const anags = [];
-for (const wordables of wordablesFromString('louisepotter')) {
-  const words = wordables.map(w => wordsByWordable[w]);
-  for (const anag of combinations(words)) anags.push([anag, goodness(anag)] as const);
-  // for (const anag of combinations(words)) {
-  //   console.log(anag, goodness(anag));
-  // }
+
+async function topNAnagrams(s: string, topN = 10000) {
+  s = standardise(s);
+  if (!s.length) return [];
+  const anags = [];
+  let anagsEvaluated = 0;
+  let lastPause = 0;
+  for (const wordables of wordablesFromString(s)) {
+    const words = wordables.map(w => wordsByWordable[w]);
+    const [, leastGoodness] = last(anags) ?? [, -Infinity];
+    for (const anag of combinations(words)) {
+      anagsEvaluated++;
+      const goodness = goodnessFromWords(anag);
+      if (goodness > leastGoodness || anags.length < topN) anags.push([anag, goodness] as const);
+    }
+    if (anags.length > topN) {
+      console.log(anags.length);
+      anags.sort(([, a], [, b]) => b - a);
+      anags.splice(topN);
+    }
+    if (false) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+
+  }
+  console.log({ anagsEvaluated });
+  return anags;
 }
-anags.sort(([, a], [, b]) => b - a);
-for (const [anag, score] of anags.slice(0, 25)) console.log(anag.join(' '));
+
+
+
+for (const [anag, score] of (await topNAnagrams('georgemackerron')).slice(0, 30)) console.log(anag.join(' '), score.toFixed(2));

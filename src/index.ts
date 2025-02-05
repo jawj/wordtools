@@ -5,7 +5,7 @@ import { Pattern } from './Pattern';
 // import * as comlink from 'comlink';
 // import type { WorkerAPI } from './combined.worker';
 
-// st w = comlink.wrap<WorkerAPI>(new Worker(new URL('./combined.worker', import.meta.url)));
+// const w = comlink.wrap<WorkerAPI>(new Worker(new URL('./combined.worker', import.meta.url)));
 
 // w.findAnagrams('georgejamesmackerron', 3, 5, 1000,
 //   comlink.proxy((...args) => {
