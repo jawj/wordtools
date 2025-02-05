@@ -3,12 +3,12 @@
     "./src/**/*"
   ],
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2017",
     "lib": [
       "es2019",
       "dom"
     ],
-    "module": "es2020",
+    "module": "es2022",
     "moduleResolution": "node",
     "strict": true,
     "sourceMap": true,

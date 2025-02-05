@@ -1,11 +1,17 @@
+import fs from 'node:fs/promises';
 
 type Words = Record<string, number>
 
 let words: Words;
 export async function loadWordWeights() {
   if (words === undefined) {
-    const response = await fetch('words.json');
-    words = await response.json();
+    try {
+      const response = await fetch('words.json');
+      words = await response.json();
+    } catch {
+      const json = await fs.readFile('docs/words.json', { encoding: 'utf-8' });
+      words = JSON.parse(json);
+    }
   }
 }
 
