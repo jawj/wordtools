@@ -1,7 +1,7 @@
 import m from 'mithril';
 import { Nav } from './Nav';
 import { stringWithCommas } from './util';
-import { waitingMessage } from './common';
+import { credits, waitingMessage } from './common';
 import wrappedWorker from './wrappedWorker';
 
 const
@@ -140,7 +140,6 @@ export function Pattern() {
                   }
                 }),
                 m('button', 'Find'),
-                m('button.secondary', { onclick: () => m.route.set('/pattern/-/freq/desc/1') }, 'Clear'),
                 m('.instructions',
                   m('h4', 'Wildcards'),
                   m('div', m.trust(`Use <span class="letter">.</span> or <span class="letter">?</span> for each unknown letter`)),
@@ -169,12 +168,7 @@ export function Pattern() {
                   pagination(),
                 ],
               ),
-              m('.credits', m.trust(`We use a dictionary of ${stringWithCommas(dictionarySize)} names and English words derived from 
-                <a href="http://aspell.net/">aspell</a>,
-                <a href="http://web.mit.edu/freebsd/head/share/dict/">web2</a>,
-                <a href="https://en.wikpedia.org">Wikipedia</a> and
-                <a href="http://crr.ugent.be/archives/2045">Brysbaert et al</a>.
-                Many of these aren't valid in word games.`))
+              credits(dictionarySize)
             )
         ));
     },

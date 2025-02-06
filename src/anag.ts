@@ -1,6 +1,6 @@
 import { getWordWeights, standardise } from './words';
 
-const pauseEvery = 50000;
+const pauseEvery = 10000;
 const last = (arr: any[]) => arr[arr.length - 1];
 
 /**
@@ -139,7 +139,7 @@ function goodnessFromWords(words: string[], wordWeights: WordWeights) {
   }, Infinity);
 
   // apply a preference for fewer words in total
-  return lowestAdjustedWeight / words.length ** 2.5;
+  return lowestAdjustedWeight / words.length ** 2;
 }
 
 // globals
@@ -154,7 +154,7 @@ function init() {
   abortFlag = false;
   finishedFlag = false;
   evaluatedCount = 0;
-  pauseAfterCount = pauseEvery;
+  pauseAfterCount = 0;
   anags = [];
 }
 
@@ -194,8 +194,9 @@ export async function find(s: string, topN = 10000) {
 }
 
 export const abort = () => abortFlag = true;
-export const finished = () => finishedFlag;
-export const evaluated = () => evaluatedCount;
-export const anagrams = (n: number) => anags.slice(0, n);
 
-// for (const [anag, score] of (await topNAnagrams('georgemackerron')).slice(0, 30)) console.log(anag.join(' '), score.toFixed(2));
+export const status = (n: number) => ({
+  finished: finishedFlag,
+  evaluated: evaluatedCount,
+  anagrams: anags.slice(0, finishedFlag ? Infinity : n),
+});

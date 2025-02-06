@@ -2,7 +2,7 @@
 import * as comlink from 'comlink';
 
 import wordsMatchingPattern from './wordsMatchingPattern';
-import { find, abort, finished, evaluated, anagrams } from './anag';
+import { find, abort, status } from './anag';
 import { loadWordWeights, getWordsCount } from './words';
 
 const workerAPI = {
@@ -11,9 +11,7 @@ const workerAPI = {
   wordsMatchingPattern,
   find,
   abort,
-  finished,
-  evaluated,
-  anagrams,
+  status,
 };
 
 comlink.expose(workerAPI);

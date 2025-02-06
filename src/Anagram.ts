@@ -1,7 +1,7 @@
 import m from 'mithril';
 import { Nav } from './Nav';
 import wrappedWorker from './wrappedWorker';
-import { waitingMessage } from './common';
+import { credits, waitingMessage } from './common';
 import { stringWithCommas } from './util';
 
 interface AnagramAttrs {
@@ -15,17 +15,17 @@ const showWhenInactive = 10000;
 export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
   let loading = true;
   let active = false;
+  let dictionarySize = 0;
 
-  let evaluated: number;
-  let anags: [string[], number][];
-  let finished: boolean;
+  let status: Awaited<ReturnType<typeof wrappedWorker.status>>;
 
   async function update() {
-    evaluated = await wrappedWorker.evaluated();
-    finished = await wrappedWorker.finished();
-    if (finished) active = false;
-    anags = await wrappedWorker.anagrams(active ? showWhileActive : Infinity);
+    status = await wrappedWorker.status(showWhileActive);
+
+    if (status.finished) active = false;
     m.redraw();
+
+    if (active) setTimeout(update, 250);
   }
 
   return {
@@ -49,7 +49,10 @@ export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
                   value: letters,
                   onchange: (e: { currentTarget: HTMLInputElement; }) => {
                     const { value } = e.currentTarget;
-                    m.route.set('/anagram/:letters', { ...vnode.attrs, letters: value });
+                    m.route.set(
+                      '/anagram/:letters',
+                      { ...vnode.attrs, letters: value === '' ? '-' : value },
+                    );
                   }
                 }),
                 active ? [
@@ -58,30 +61,30 @@ export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
                       await wrappedWorker.abort();
                       update();
                     }
-                  }, 'Cancel'),
-                  m('.progress', waitingMessage(`${stringWithCommas(evaluated)} anagrams evaluated, showing top ${showWhileActive}`)),
+                  }, 'Stop'),
+                  m('.progress', waitingMessage(`${stringWithCommas(status.evaluated)} evaluated` + (status.evaluated > showWhileActive ? `, ${showWhileActive} shown` : ''))),
                 ] : [
                   m('button', {
-                    onclick: async () => {
+                    onclick: () => setTimeout(() => {  // time to update attrs.letters!
                       void wrappedWorker.find(vnode.attrs.letters, showWhenInactive);
                       active = true;
-                      while (active) await update();
-                    }
+                      update();
+                    }, 0)
                   }, 'Find'),
-                  m('button.secondary', {
-                    onclick: () => m.route.set('/anagram/-')
-                  }, 'Clear'),
-                  evaluated !== 0 && m('.progress', `${stringWithCommas(evaluated)} anagrams found, top ${showWhenInactive} retained`),
+                  status.evaluated !== 0 && m('.progress',
+                    `${stringWithCommas(status.evaluated)} found` + (status.evaluated > showWhenInactive ? `, ${showWhenInactive} kept` : '')
+                  ),
                 ]
               ),
 
-              m('.matches', anags.map(a => m('span.match', a[0].join(' ')))),
-            )
+              m('.matches', status.anagrams.map(a => m('span.match', a[0].join(' ')))),
+            ),
+          credits(dictionarySize)
         )
       );
     },
     async oninit() {
-      await wrappedWorker.getWordsCount();  // side effect: loads words!
+      dictionarySize = await wrappedWorker.getWordsCount();
       loading = false;
       m.redraw();
     },
