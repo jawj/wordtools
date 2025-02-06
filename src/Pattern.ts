@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { Nav } from './Nav';
 import { stringWithCommas } from './util';
+import { waitingMessage } from './common';
 import wrappedWorker from './wrappedWorker';
 
 const
@@ -74,15 +75,15 @@ export function Pattern() {
     );
   }
 
-  function waitingMessage(message: string) {
-    return [
-      m('img', { src: 'puff.svg', width: 26, height: 26, style: { verticalAlign: 'text-bottom' } }),
-      m.trust(` &nbsp; ${message} …`)
-    ];
-  }
-
   return {
-    view: (vnode: m.Vnode<PatternAttrs>) => {
+    async oninit() {
+      dictionarySize = await wrappedWorker.getWordsCount();  // side effect: loads words!
+      loading = false;
+      m.redraw();
+    },
+    oncreate: updateMatches,
+    onupdate: updateMatches,
+    view(vnode: m.Vnode<PatternAttrs>) {
       const
         pattern = vnode.attrs.pattern === emptyValue ? '' : vnode.attrs.pattern,
         page = parseInt(vnode.attrs.page, 10),
@@ -119,7 +120,7 @@ export function Pattern() {
         ];
 
       return m('.page',
-        m(Nav),
+        m(Nav, { page: 'pattern' }),
         m('.pattern',
           m('h2', 'Find words with unknown letters'),
           loading ? m('.message', waitingMessage('Loading dictionary')) :
@@ -176,13 +177,6 @@ export function Pattern() {
                 Many of these aren't valid in word games.`))
             )
         ));
-    },
-    oncreate: updateMatches,
-    onupdate: updateMatches,
-    oninit: async () => {
-      dictionarySize = await wrappedWorker.getWordsCount();  // side effect: loads words!
-      loading = false;
-      m.redraw();
     },
   };
 }

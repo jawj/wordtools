@@ -1,6 +1,7 @@
 
 import m from 'mithril';
 import { Pattern } from './Pattern';
+import { Anagram } from './Anagram';
 
 // import * as comlink from 'comlink';
 // import type { WorkerAPI } from './combined.worker';
@@ -13,15 +14,10 @@ import { Pattern } from './Pattern';
 //     return true;
 //   })).then(x => console.log(x));
 
-const
-  anagram = {
-    view: () =>
-      m('.anagram')
-  };
 
 m.route(document.getElementById('main')!, '/pattern/-/freq/desc/1', {
   '/pattern/:pattern/:order/:direction/:page': Pattern,
-  '/anagram': anagram,
+  '/anagram/:letters': Anagram,
 });
 
 // mama's greengrocer joke, joggers remake romance
