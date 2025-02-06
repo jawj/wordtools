@@ -21,6 +21,10 @@ button.secondary {
   color: #77f;
 }
 
+.progress {
+  margin: 2ex 0;
+}
+
 .instructions {
   margin: 2ex 0 0;
 }
@@ -97,6 +101,11 @@ input[type=search] {
   margin-right: .25ex;
   background: #fff;
   text-transform: lowercase;
+  width: 200px;
+}
+
+input[type=search].anag-input {
+  width: 300px;
 }
 
 input[type=search]::-webkit-search-cancel-button {

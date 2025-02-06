@@ -2,16 +2,31 @@ import m from 'mithril';
 import { Nav } from './Nav';
 import wrappedWorker from './wrappedWorker';
 import { waitingMessage } from './common';
+import { stringWithCommas } from './util';
 
 interface AnagramAttrs {
   letters: string;
 }
 
 const emptyValue = '-';
+const showWhileActive = 100;
+const showWhenInactive = 10000;
 
 export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
   let loading = true;
+  let active = false;
 
+  let evaluated: number;
+  let anags: [string[], number][];
+  let finished: boolean;
+
+  async function update() {
+    evaluated = await wrappedWorker.evaluated();
+    finished = await wrappedWorker.finished();
+    if (finished) active = false;
+    anags = await wrappedWorker.anagrams(active ? showWhileActive : Infinity);
+    m.redraw();
+  }
 
   return {
     view(vnode: m.Vnode<AnagramAttrs>) {
@@ -24,7 +39,7 @@ export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
           loading ? m('.message', waitingMessage('Loading dictionary')) :
             m('.interface',
               m('.pattern-entry',
-                m('input.pattern-input', {
+                m('input.anag-input', {
                   type: 'search',
                   autocorrect: 'off',
                   autocomplete: 'off',
@@ -37,9 +52,30 @@ export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
                     m.route.set('/anagram/:letters', { ...vnode.attrs, letters: value });
                   }
                 }),
-                m('button', 'Find'),
-                m('button.secondary', { onclick: () => m.route.set('/anagram/-') }, 'Clear'),
-              )
+                active ? [
+                  m('button', {
+                    onclick: async () => {
+                      await wrappedWorker.abort();
+                      update();
+                    }
+                  }, 'Cancel'),
+                  m('.progress', waitingMessage(`${stringWithCommas(evaluated)} anagrams evaluated, showing top ${showWhileActive}`)),
+                ] : [
+                  m('button', {
+                    onclick: async () => {
+                      void wrappedWorker.find(vnode.attrs.letters, showWhenInactive);
+                      active = true;
+                      while (active) await update();
+                    }
+                  }, 'Find'),
+                  m('button.secondary', {
+                    onclick: () => m.route.set('/anagram/-')
+                  }, 'Clear'),
+                  evaluated !== 0 && m('.progress', `${stringWithCommas(evaluated)} anagrams found, top ${showWhenInactive} retained`),
+                ]
+              ),
+
+              m('.matches', anags.map(a => m('span.match', a[0].join(' ')))),
             )
         )
       );
@@ -49,5 +85,11 @@ export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
       loading = false;
       m.redraw();
     },
+    async oncreate() {
+      update();
+    },
+    onremove() {
+      active = false;
+    }
   }
 };

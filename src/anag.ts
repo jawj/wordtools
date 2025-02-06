@@ -1,15 +1,13 @@
 import { getWordWeights, standardise } from './words';
 
+const pauseEvery = 50000;
 const last = (arr: any[]) => arr[arr.length - 1];
 
 /**
  * A wordable is an alphabetically-ordered sequence of letters which can be
  * rearranged to form one or more words.
  */
-
-let wordsByWordable: Record<string, string[]>;
-
-function makeWordsByWordable(wordWeights: Awaited<ReturnType<typeof getWordWeights>>) {
+function makeWordsByWordable(wordWeights: WordWeights) {
   if (wordsByWordable) return;
   wordsByWordable = {};
   for (const word in wordWeights) {
@@ -19,9 +17,7 @@ function makeWordsByWordable(wordWeights: Awaited<ReturnType<typeof getWordWeigh
   }
 }
 
-const wordWeights = await getWordWeights();
-makeWordsByWordable(wordWeights);
-
+type WordWeights = Awaited<ReturnType<typeof getWordWeights>>;
 
 type LetterCount = [string[], number[]];
 
@@ -135,7 +131,7 @@ function* combinations(s: string[][]) {
   }
 }
 
-function goodnessFromWords(words: string[]) {
+function goodnessFromWords(words: string[], wordWeights: WordWeights) {
   // start with weight of lowest-weighed word, after adjusting weight to give a slight preference for longer words
   const lowestAdjustedWeight = words.reduce((memo, word) => {
     const adjustedWeight = wordWeights[word] + .01 * word.length;
@@ -146,36 +142,60 @@ function goodnessFromWords(words: string[]) {
   return lowestAdjustedWeight / words.length ** 2.5;
 }
 
+// globals
+let wordsByWordable: Record<string, string[]>;  // populated on first call to topAnagrams
+let abortFlag: boolean;
+let finishedFlag: boolean;
+let evaluatedCount: number;
+let pauseAfterCount: number;
+let anags: [string[], number][];
 
+function init() {
+  abortFlag = false;
+  finishedFlag = false;
+  evaluatedCount = 0;
+  pauseAfterCount = pauseEvery;
+  anags = [];
+}
 
-async function topNAnagrams(s: string, topN = 10000) {
+init();
+
+export async function find(s: string, topN = 10000) {
   s = standardise(s);
-  if (!s.length) return [];
-  const anags = [];
-  let anagsEvaluated = 0;
-  let lastPause = 0;
+  if (!s.length) return;
+
+  // initialise
+  init();
+
+  // these are no-ops the second time round
+  const wordWeights = await getWordWeights();
+  makeWordsByWordable(wordWeights);
+
   for (const wordables of wordablesFromString(s)) {
     const words = wordables.map(w => wordsByWordable[w]);
     const [, leastGoodness] = last(anags) ?? [, -Infinity];
     for (const anag of combinations(words)) {
-      anagsEvaluated++;
-      const goodness = goodnessFromWords(anag);
-      if (goodness > leastGoodness || anags.length < topN) anags.push([anag, goodness] as const);
+      evaluatedCount++;
+      const goodness = goodnessFromWords(anag, wordWeights);
+      if (goodness > leastGoodness || anags.length < topN) anags.push([anag, goodness]);
     }
     if (anags.length > topN) {
-      console.log(anags.length);
       anags.sort(([, a], [, b]) => b - a);
       anags.splice(topN);
     }
-    if (false) {
-      await new Promise(resolve => setTimeout(resolve, 0));
+    if (evaluatedCount >= pauseAfterCount) {
+      await new Promise(resolve => setTimeout(resolve, 0));  // yield to the run loop
+      if (abortFlag) break;
+      pauseAfterCount += pauseEvery;
     }
-
   }
-  console.log({ anagsEvaluated });
-  return anags;
+
+  finishedFlag = true;
 }
 
+export const abort = () => abortFlag = true;
+export const finished = () => finishedFlag;
+export const evaluated = () => evaluatedCount;
+export const anagrams = (n: number) => anags.slice(0, n);
 
-
-for (const [anag, score] of (await topNAnagrams('georgemackerron')).slice(0, 30)) console.log(anag.join(' '), score.toFixed(2));
+// for (const [anag, score] of (await topNAnagrams('georgemackerron')).slice(0, 30)) console.log(anag.join(' '), score.toFixed(2));
