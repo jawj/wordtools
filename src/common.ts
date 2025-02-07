@@ -8,11 +8,11 @@ export function waitingMessage(message: string) {
   ];
 }
 
-export function credits(dictionarySize: number) {
+export function credits(dictionarySize: number, extra = '') {
   return m('.credits', m.trust(`We use a dictionary of ${stringWithCommas(dictionarySize)} names and English words derived from 
     <a href="http://aspell.net/">aspell</a>,
     <a href="http://web.mit.edu/freebsd/head/share/dict/">web2</a>,
     <a href="https://en.wikpedia.org">Wikipedia</a> and
     <a href="http://crr.ugent.be/archives/2045">Brysbaert et al</a>.
-    Many of these aren't valid in word games.`));
+    Many of these aren't valid in word games.` + extra));
 }

@@ -160,6 +160,16 @@ export async function find(s: string, keepN: number, reportEveryN: number, repor
   makeWordsByWordable(wordWeights);
 
   for (const wordables of wordablesFromString(s)) {
+    if (evaluated >= reportAfterN) {
+      const stop = await cb({
+        working: true,
+        evaluated,
+        anagrams: anagrams.slice(0, reportN),
+      });
+      if (stop) break;
+      reportAfterN += reportEveryN * (1 + Math.log10(1 + reportAfterN));
+    }
+
     const words = wordables.map(w => wordsByWordable[w]);
     const [, leastGoodness] = last(anagrams) ?? [, -Infinity];
     for (const anag of combinations(words)) {
@@ -170,15 +180,6 @@ export async function find(s: string, keepN: number, reportEveryN: number, repor
     if (anagrams.length > keepN) {
       anagrams.sort(([, a], [, b]) => b - a);
       anagrams.splice(keepN);
-    }
-    if (evaluated >= reportAfterN) {
-      const stop = await cb({
-        working: true,
-        evaluated,
-        anagrams: anagrams.slice(0, reportN),
-      });
-      if (stop) break;
-      reportAfterN += reportEveryN;
     }
   }
 

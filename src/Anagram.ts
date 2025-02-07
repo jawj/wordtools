@@ -11,9 +11,8 @@ interface AnagramAttrs {
 }
 
 const emptyValue = '-';
-const reportN = 100;
-const reportEveryN = 234_571;  // weird so that reported numbers seem pretty random
 const keepN = 10_000;
+const reportEveryN = 100_000;
 
 function groupByLength(anagrams: Anagram[], max = 10) {
   const groups: Anagram[][] = [];
@@ -39,7 +38,7 @@ export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
   function start() {
     status.working = true;
     const letters = (document.querySelector('#anag-input') as HTMLInputElement).value;
-    void wrappedWorker.find(letters, keepN, reportEveryN, reportN, comlink.proxy(async newStatus => {
+    void wrappedWorker.find(letters, keepN, reportEveryN, keepN, comlink.proxy(async newStatus => {
       const prevStatus = status;
       status = newStatus;
       m.redraw();
@@ -90,7 +89,7 @@ export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
                   }, 'Stop'),
                   m('.progress', waitingMessage(
                     `${stringWithCommas(status.evaluated)} evaluated` +
-                    (status.evaluated > reportN ? `, ${stringWithCommas(reportN)} shown` : '')
+                    (status.evaluated > keepN ? `, ${stringWithCommas(keepN)} kept` : '')
                   )),
                 ] : [
                   // Find button
@@ -116,8 +115,7 @@ export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
                   status.anagrams.map(a => m('span.match', a[0].join(' ')))
               ),
             ),
-
-          credits(dictionarySize)
+          credits(dictionarySize, ' Anagrams are retained and displayed based on their least common word, sorted from most to least common. In addition, longer words are slightly preferred, and fewer words are strongly preferred.'),
         )
       );
     },
