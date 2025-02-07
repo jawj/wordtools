@@ -79,14 +79,14 @@ export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
                   }, 'Stop'),
                   m('.progress', waitingMessage(
                     `${stringWithCommas(status.evaluated)} evaluated` +
-                    (status.evaluated > reportN ? `, ${reportN} shown` : '')
+                    (status.evaluated > reportN ? `, ${stringWithCommas(reportN)} shown` : '')
                   )),
                 ] : [
                   // Find button
                   m('button', { onclick: start }, 'Find'),
                   status.evaluated !== 0 && m('.progress',
                     `${stringWithCommas(status.evaluated)} found` +
-                    (status.evaluated > keepN ? `, ${keepN} kept` : '')
+                    (status.evaluated > keepN ? `, ${stringWithCommas(keepN)} kept` : '')
                   ),
                 ]
               ),
