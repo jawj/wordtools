@@ -3,29 +3,37 @@ import { Nav } from './Nav';
 import wrappedWorker from './wrappedWorker';
 import { credits, waitingMessage } from './common';
 import { stringWithCommas } from './util';
+import type { AnagramStatus } from './anag';
+import * as comlink from 'comlink';
 
 interface AnagramAttrs {
   letters: string;
 }
 
 const emptyValue = '-';
-const showWhileActive = 100;
-const showWhenInactive = 10000;
+const reportN = 100;
+const reportEveryN = 123_457;
+const keepN = 10_000;
 
 export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
   let loading = true;
-  let active = false;
   let dictionarySize = 0;
 
-  let status: Awaited<ReturnType<typeof wrappedWorker.status>>;
+  let status: AnagramStatus = {
+    evaluated: 0,
+    working: false,
+    anagrams: [],
+  };
 
-  async function update() {
-    status = await wrappedWorker.status(showWhileActive);
-
-    if (status.finished) active = false;
-    m.redraw();
-
-    if (active) setTimeout(update, 250);
+  function start() {
+    status.working = true;
+    const letters = (document.querySelector('#anag-input') as HTMLInputElement).value;
+    void wrappedWorker.find(letters, keepN, reportEveryN, reportN, comlink.proxy(async newStatus => {
+      const prevStatus = status;
+      status = newStatus;
+      m.redraw();
+      return !prevStatus.working;
+    }));
   }
 
   return {
@@ -39,7 +47,7 @@ export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
           loading ? m('.message', waitingMessage('Loading dictionary')) :
             m('.interface',
               m('.pattern-entry',
-                m('input.anag-input', {
+                m('input#anag-input', {
                   type: 'search',
                   autocorrect: 'off',
                   autocomplete: 'off',
@@ -47,38 +55,45 @@ export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
                   spellcheck: false,
                   size: 15,
                   value: letters,
-                  onchange: (e: { currentTarget: HTMLInputElement; }) => {
+                  onchange(e: { currentTarget: HTMLInputElement; }) {
                     const { value } = e.currentTarget;
                     m.route.set(
                       '/anagram/:letters',
                       { ...vnode.attrs, letters: value === '' ? '-' : value },
                     );
+                  },
+                  onkeyup(e: any) {
+                    if (e.key === 'Enter') {
+                      if (status.working) status.working = false;
+                      else start()
+                    }
+                    e.redraw = false;
                   }
                 }),
-                active ? [
+                status.working ? [
+                  // Stop button
                   m('button', {
-                    onclick: async () => {
-                      await wrappedWorker.abort();
-                      update();
+                    onclick() {
+                      status.working = false;
                     }
                   }, 'Stop'),
-                  m('.progress', waitingMessage(`${stringWithCommas(status.evaluated)} evaluated` + (status.evaluated > showWhileActive ? `, ${showWhileActive} shown` : ''))),
+                  m('.progress', waitingMessage(
+                    `${stringWithCommas(status.evaluated)} evaluated` +
+                    (status.evaluated > reportN ? `, ${reportN} shown` : '')
+                  )),
                 ] : [
-                  m('button', {
-                    onclick: () => setTimeout(() => {  // time to update attrs.letters!
-                      void wrappedWorker.find(vnode.attrs.letters, showWhenInactive);
-                      active = true;
-                      update();
-                    }, 0)
-                  }, 'Find'),
+                  // Find button
+                  m('button', { onclick: start }, 'Find'),
                   status.evaluated !== 0 && m('.progress',
-                    `${stringWithCommas(status.evaluated)} found` + (status.evaluated > showWhenInactive ? `, ${showWhenInactive} kept` : '')
+                    `${stringWithCommas(status.evaluated)} found` +
+                    (status.evaluated > keepN ? `, ${keepN} kept` : '')
                   ),
                 ]
               ),
 
               m('.matches', status.anagrams.map(a => m('span.match', a[0].join(' ')))),
             ),
+
           credits(dictionarySize)
         )
       );
@@ -88,11 +103,8 @@ export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
       loading = false;
       m.redraw();
     },
-    async oncreate() {
-      update();
-    },
     onremove() {
-      active = false;
+      status.working = false;
     }
   }
 };

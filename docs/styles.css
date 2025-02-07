@@ -104,7 +104,7 @@ input[type=search] {
   width: 200px;
 }
 
-input[type=search].anag-input {
+input[type=search]#anag-input {
   width: 300px;
 }
 

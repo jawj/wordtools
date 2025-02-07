@@ -1,12 +1,12 @@
 import { getWordWeights, standardise } from './words';
 
-const pauseEvery = 10000;
 const last = (arr: any[]) => arr[arr.length - 1];
 
 /**
  * A wordable is an alphabetically-ordered sequence of letters which can be
  * rearranged to form one or more words.
  */
+let wordsByWordable: Record<string, string[]>;  // populated on first call to find
 function makeWordsByWordable(wordWeights: WordWeights) {
   if (wordsByWordable) return;
   wordsByWordable = {};
@@ -45,7 +45,6 @@ function countLetters(word: string) {
  * specific side. The last item records how many combinations have been 
  * produced, and the next-to-last records how many unique combinations exist.
  */
-
 function createAllocation(maxValues: number[]) {
   const len = maxValues.length;
   const mb = new Uint32Array(len + 2);
@@ -99,7 +98,6 @@ function* splitsFromString(s: string) {
   } while (nextAllocation(mb));
 }
 
-
 /**
  * This generator yields every possible unique combination of wordables from
  * the letters of the string provided.
@@ -142,30 +140,22 @@ function goodnessFromWords(words: string[], wordWeights: WordWeights) {
   return lowestAdjustedWeight / words.length ** 2;
 }
 
-// globals
-let wordsByWordable: Record<string, string[]>;  // populated on first call to topAnagrams
-let abortFlag: boolean;
-let finishedFlag: boolean;
-let evaluatedCount: number;
-let pauseAfterCount: number;
-let anags: [string[], number][];
+export type Anagram = [string[], number];
 
-function init() {
-  abortFlag = false;
-  finishedFlag = false;
-  evaluatedCount = 0;
-  pauseAfterCount = 0;
-  anags = [];
+export interface AnagramStatus {
+  evaluated: number;
+  working: boolean;
+  anagrams: Anagram[];
 }
 
-init();
-
-export async function find(s: string, topN = 10000) {
+export async function find(s: string, keepN: number, reportEveryN: number, reportN: number, cb: (status: AnagramStatus) => Promise<boolean>) {
   s = standardise(s);
   if (!s.length) return;
 
   // initialise
-  init();
+  const anagrams: Anagram[] = [];
+  let evaluated = 0;
+  let reportAfterN = 0;
 
   // these are no-ops the second time round
   const wordWeights = await getWordWeights();
@@ -173,30 +163,30 @@ export async function find(s: string, topN = 10000) {
 
   for (const wordables of wordablesFromString(s)) {
     const words = wordables.map(w => wordsByWordable[w]);
-    const [, leastGoodness] = last(anags) ?? [, -Infinity];
+    const [, leastGoodness] = last(anagrams) ?? [, -Infinity];
     for (const anag of combinations(words)) {
-      evaluatedCount++;
+      evaluated++;
       const goodness = goodnessFromWords(anag, wordWeights);
-      if (goodness > leastGoodness || anags.length < topN) anags.push([anag, goodness]);
+      if (goodness > leastGoodness || anagrams.length < keepN) anagrams.push([anag, goodness]);
     }
-    if (anags.length > topN) {
-      anags.sort(([, a], [, b]) => b - a);
-      anags.splice(topN);
+    if (anagrams.length > keepN) {
+      anagrams.sort(([, a], [, b]) => b - a);
+      anagrams.splice(keepN);
     }
-    if (evaluatedCount >= pauseAfterCount) {
-      await new Promise(resolve => setTimeout(resolve, 0));  // yield to the run loop
-      if (abortFlag) break;
-      pauseAfterCount += pauseEvery;
+    if (evaluated >= reportAfterN) {
+      const stop = await cb({
+        working: true,
+        evaluated,
+        anagrams: anagrams.slice(0, reportN),
+      });
+      if (stop) break;
+      reportAfterN += reportEveryN;
     }
   }
 
-  finishedFlag = true;
+  await cb({
+    working: false,
+    evaluated,
+    anagrams,
+  });
 }
-
-export const abort = () => abortFlag = true;
-
-export const status = (n: number) => ({
-  finished: finishedFlag,
-  evaluated: evaluatedCount,
-  anagrams: anags.slice(0, finishedFlag ? Infinity : n),
-});
