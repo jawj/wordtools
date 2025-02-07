@@ -33,12 +33,10 @@ button.secondary {
   margin: .25ex 0 0;
 }
 
-.message {
-  margin: 2ex 0 0;
-}
-
+#grouping,
+.message,
 .matches {
-  margin: 1ex 0 0;
+  margin: 2ex 0 0;
 }
 
 a {

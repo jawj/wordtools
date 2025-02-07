@@ -3,7 +3,7 @@ import { Nav } from './Nav';
 import wrappedWorker from './wrappedWorker';
 import { credits, waitingMessage } from './common';
 import { stringWithCommas } from './util';
-import type { AnagramStatus } from './anag';
+import type { AnagramStatus, Anagram } from './anag';
 import * as comlink from 'comlink';
 
 interface AnagramAttrs {
@@ -12,12 +12,23 @@ interface AnagramAttrs {
 
 const emptyValue = '-';
 const reportN = 100;
-const reportEveryN = 123_457;
+const reportEveryN = 234_571;  // weird so that reported numbers seem pretty random
 const keepN = 10_000;
+
+function groupByLength(anagrams: Anagram[], max = 10) {
+  const groups: Anagram[][] = [];
+  for (let i = 0; i <= max; i++) groups.push([]);
+  for (const anagram of anagrams) {
+    const [{ length }] = anagram;
+    groups[length > max ? max : length].push(anagram);
+  }
+  return groups;
+}
 
 export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
   let loading = true;
   let dictionarySize = 0;
+  let groupByWordCount = false;
 
   let status: AnagramStatus = {
     evaluated: 0,
@@ -90,8 +101,20 @@ export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
                   ),
                 ]
               ),
-
-              m('.matches', status.anagrams.map(a => m('span.match', a[0].join(' ')))),
+              m('#grouping', m('label', m('input[type=checkbox]', {
+                checked: groupByWordCount,
+                onchange(e: { currentTarget: HTMLInputElement; }) {
+                  groupByWordCount = e.currentTarget.checked;
+                }
+              }), ' Group by word count')),
+              m('.matches',
+                groupByWordCount ?
+                  groupByLength(status.anagrams).map((group, wordCount) => group.length > 0 && [
+                    m('h3', `${wordCount} words`),
+                    group.map(a => m('span.match', a[0].join(' ')))
+                  ]) :
+                  status.anagrams.map(a => m('span.match', a[0].join(' ')))
+              ),
             ),
 
           credits(dictionarySize)
