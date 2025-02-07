@@ -131,10 +131,8 @@ function* combinations(s: string[][]) {
 
 function goodnessFromWords(words: string[], wordWeights: WordWeights) {
   // start with weight of lowest-weighed word, after adjusting weight to give a slight preference for longer words
-  const lowestAdjustedWeight = words.reduce((memo, word) => {
-    const adjustedWeight = wordWeights[word] + .01 * word.length;
-    return memo < adjustedWeight ? memo : adjustedWeight;
-  }, Infinity);
+  const adjustedWeights = words.map(word => wordWeights[word] + .01 * word.length);
+  const lowestAdjustedWeight = Math.min(...adjustedWeights);
 
   // apply a preference for fewer words in total
   return lowestAdjustedWeight / words.length ** 2;
