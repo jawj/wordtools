@@ -5,13 +5,9 @@ type Words = Record<string, number>
 let words: Words;
 export async function loadWordWeights() {
   if (words === undefined) {
-    // try {
     const response = await fetch('words.json');
     words = await response.json();
-    // } catch {
-    //   const json = await fs.readFile('docs/words.json', { encoding: 'utf-8' });
-    //   words = JSON.parse(json);
-    // }
+    words["i"] = words["you"];  // "i" is oddly low-weighted otherwise
   }
 }
 

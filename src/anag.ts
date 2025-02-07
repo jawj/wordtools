@@ -135,7 +135,7 @@ function goodnessFromWords(words: string[], wordWeights: WordWeights) {
   const lowestAdjustedWeight = Math.min(...adjustedWeights);
 
   // apply a preference for fewer words in total
-  return lowestAdjustedWeight / words.length ** 2;
+  return lowestAdjustedWeight / words.length;
 }
 
 export type Anagram = [string[], number];
