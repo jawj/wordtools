@@ -13,6 +13,7 @@ const rl = readline.createInterface({
 const
   words: string[] = [],
   wordCounts: Record<string, number> = {};
+
 let
   articleCount = 0,
   distinctWordCount = 0;

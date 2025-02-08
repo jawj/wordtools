@@ -1,12 +1,21 @@
 import { getWordWeights, standardise } from './words';
 
-const last = (arr: any[]) => arr[arr.length - 1];
 
-/**
- * A wordable is an alphabetically-ordered sequence of letters which can be
- * rearranged to form one or more words.
- */
+type WordWeights = Awaited<ReturnType<typeof getWordWeights>>;
+
+type LetterCount = [string[], number[]];
+
+export type Anagram = [string[], number];
+
+export interface AnagramStatus {
+  evaluated: number;
+  working: boolean;
+  anagrams: Anagram[];
+}
+
+
 let wordsByWordable: Record<string, string[]>;  // populated on first call to find
+
 function makeWordsByWordable(wordWeights: WordWeights) {
   if (wordsByWordable) return;
   wordsByWordable = {};
@@ -16,10 +25,6 @@ function makeWordsByWordable(wordWeights: WordWeights) {
     wordsByWordable[wordable].push(word);
   }
 }
-
-type WordWeights = Awaited<ReturnType<typeof getWordWeights>>;
-
-type LetterCount = [string[], number[]];
 
 function countLetters(word: string) {
   const rawLetters = word.split('').sort();
@@ -31,48 +36,10 @@ function countLetters(word: string) {
       letters.push(letter);
       counts.push(0);
     }
-    counts[counts.length - 1]++
+    counts[counts.length - 1]++;
     prevLetter = letter;
   }
   return [letters, counts] as LetterCount;
-}
-
-/**
- * The Allocation data structure tracks every unique combination of letters.
- * It's a Uint32Array. Each unique letter is represented by one array item.
- * For each item, the high 16 bits record how many of that letter is available.
- * The low 16 bits record how many of that letter is currently allocated to a
- * specific side. The last item records how many combinations have been 
- * produced, and the next-to-last records how many unique combinations exist.
- */
-function createAllocation(maxValues: number[]) {
-  const len = maxValues.length;
-  const mb = new Uint32Array(len + 2);
-  let product = 1, i = 0;
-  for (; i < len; i++) {
-    const max = maxValues[i];
-    mb[i] = max << 16;
-    product *= (max + 1);
-  }
-  mb[i] = Math.ceil(product / 2);
-  return mb;
-}
-
-function nextAllocation(alloc: Uint32Array) {
-  const len = alloc.length - 2;  // exclude count and index at last 2 positions
-  const halfway = alloc[len];
-  const allocIndex = ++alloc[len + 1];
-  for (let i = 0; i < len; i++) {
-    const col = alloc[i];
-    const max = col >>> 16;
-    const v = (col & 0xffff) + 1;  // increment value
-    if (v <= max) {
-      alloc[i] = (max << 16) | v;
-      return allocIndex < halfway;
-    }
-    alloc[i] = max << 16;  // v is implicitly zero 
-  }
-  throw new Error('This should be impossible');
 }
 
 /**
@@ -80,30 +47,44 @@ function nextAllocation(alloc: Uint32Array) {
  * the letters of the string provided. The second string returned may be empty,
  * but the first never is (if a non-zero length string is provided).
  */
-function* splitsFromString(s: string) {
-  var [letters, counts] = countLetters(s);
-  var mb = createAllocation(counts);
-  const len = letters.length;
+function* partitionsForLettersInString(s: string) {
+  const [letters, maxLetterCounts] = countLetters(s);
+
+  const lettersInWord = letters.length;
+  let partitionIndex = 0;
+  let letterCounts = letters.map(() => 0);
+  const product = maxLetterCounts.reduce((memo, i) => memo * (i + 1), 1);
+  const stopBefore = Math.ceil(product / 2);
+
   do {
     let s1 = '', s2 = '';
-    for (let i = 0; i < len; i++) {
+    for (let i = 0; i < lettersInWord; i++) {
       const letter = letters[i];
-      const col = mb[i];
-      const max = col >>> 16;
-      let v = col & 0xffff;
-      s1 += letter.repeat(v);
-      s2 += letter.repeat(max - v);
+      const maxLetterCount = maxLetterCounts[i];
+      const letterCount = letterCounts[i];
+      s1 += letter.repeat(letterCount);
+      s2 += letter.repeat(maxLetterCount - letterCount);
     }
+
     yield [s2, s1];  // s1 may be empty
-  } while (nextAllocation(mb));
+
+    partitionIndex++
+    for (let i = 0; i < lettersInWord; i++) {
+      letterCounts[i]++;
+      if (letterCounts[i] <= maxLetterCounts[i]) break;
+      letterCounts[i] = 0;
+    }
+
+  } while (partitionIndex < stopBefore);
 }
 
 /**
- * This generator yields every possible unique combination of wordables from
- * the letters of the string provided.
+ * A wordable is an alphabetically-ordered sequence of letters which can be
+ * rearranged to form one or more words. This generator yields every possible
+ * unique combination of wordables from the letters of the string provided.
  */
 function* wordablesFromString(s: string, kept: string[] = []): Generator<string[]> {
-  for (const [keep, splitAgain] of splitsFromString(s)) {
+  for (const [keep, splitAgain] of partitionsForLettersInString(s)) {
     if (!wordsByWordable[keep]) continue;  // keep only letters that can make words
     const wordables = [...kept, keep];
     if (splitAgain === '') yield wordables;
@@ -115,7 +96,7 @@ function* wordablesFromString(s: string, kept: string[] = []): Generator<string[
  * This generator yields every possible combination of the strings in the
  * arrays it's given, much like a FULL JOIN in SQL.
  */
-function* combinations(s: string[][]) {
+function* allCombinationsOfStrings(s: string[][]) {
   const lengths = s.map(s => s.length);
   const indices = s.map(() => 0);
   while (true) {
@@ -129,24 +110,16 @@ function* combinations(s: string[][]) {
   }
 }
 
-function goodnessFromWords(words: string[], wordWeights: WordWeights) {
-  // start with weight of lowest-weighed word, after adjusting weight to give a slight preference for longer words
-  const adjustedWeights = words.map(word => wordWeights[word] + .01 * word.length);
+function goodnessOfWords(words: string[], wordWeights: WordWeights) {
+  // start with weight of lowest-weighed word
+  const adjustedWeights = words.map(word => wordWeights[word]);
   const lowestAdjustedWeight = Math.min(...adjustedWeights);
 
   // apply a preference for fewer words in total
-  return lowestAdjustedWeight / words.length;
+  return lowestAdjustedWeight / (words.length + 1);
 }
 
-export type Anagram = [string[], number];
-
-export interface AnagramStatus {
-  evaluated: number;
-  working: boolean;
-  anagrams: Anagram[];
-}
-
-export async function find(s: string, keepN: number, reportEveryN: number, reportN: number, cb: (status: AnagramStatus) => Promise<boolean>) {
+export async function find(s: string, keepN: number, reportEveryN: number, cb: (status: AnagramStatus) => Promise<boolean>) {
   s = standardise(s);
   if (!s.length) return;
 
@@ -154,38 +127,36 @@ export async function find(s: string, keepN: number, reportEveryN: number, repor
   const anagrams: Anagram[] = [];
   let evaluated = 0;
   let reportAfterN = 0;
+  let leastGoodness = -Infinity;
 
   // these are no-ops the second time round
   const wordWeights = await getWordWeights();
   makeWordsByWordable(wordWeights);
 
+  const t0 = typeof performance !== 'undefined' && performance.now();
+
   for (const wordables of wordablesFromString(s)) {
     if (evaluated >= reportAfterN) {
-      const stop = await cb({
-        working: true,
-        evaluated,
-        anagrams: anagrams.slice(0, reportN),
-      });
+      reportAfterN += reportEveryN;
+      const stop = await cb({ working: true, evaluated, anagrams });
       if (stop) break;
-      reportAfterN += reportEveryN * (1 + Math.log10(1 + reportAfterN));
     }
 
     const words = wordables.map(w => wordsByWordable[w]);
-    const [, leastGoodness] = last(anagrams) ?? [, -Infinity];
-    for (const anag of combinations(words)) {
+    for (const anag of allCombinationsOfStrings(words)) {
       evaluated++;
-      const goodness = goodnessFromWords(anag, wordWeights);
-      if (goodness > leastGoodness || anagrams.length < keepN) anagrams.push([anag, goodness]);
+      const goodness = goodnessOfWords(anag, wordWeights);
+      if (goodness > leastGoodness) anagrams.push([anag, goodness]);
     }
+
     if (anagrams.length > keepN) {
       anagrams.sort(([, a], [, b]) => b - a);
       anagrams.splice(keepN);
+      leastGoodness = anagrams[keepN - 1][1];
     }
   }
 
-  await cb({
-    working: false,
-    evaluated,
-    anagrams,
-  });
+  if (t0) console.log(performance.now() - t0 + 'ms');
+
+  await cb({ working: false, evaluated, anagrams });
 }

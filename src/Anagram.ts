@@ -12,7 +12,7 @@ interface AnagramAttrs {
 
 const emptyValue = '-';
 const keepN = 10_000;
-const reportEveryN = 100_000;
+const reportEveryN = 456_789;
 
 function groupByLength(anagrams: Anagram[], max = 10) {
   const groups: Anagram[][] = [];
@@ -38,7 +38,7 @@ export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
   function start() {
     status.working = true;
     const letters = (document.querySelector('#anag-input') as HTMLInputElement).value;
-    void wrappedWorker.find(letters, keepN, reportEveryN, keepN, comlink.proxy(async newStatus => {
+    void wrappedWorker.find(letters, keepN, reportEveryN, comlink.proxy(async newStatus => {
       const prevStatus = status;
       status = newStatus;
       m.redraw();
@@ -115,7 +115,7 @@ export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
                   status.anagrams.map(a => m('span.match', a[0].join(' ')))
               ),
             ),
-          credits(dictionarySize, ' Anagrams are retained and displayed based on their least common word, sorted from most to least common. In addition, longer words are slightly preferred, and fewer words are strongly preferred.'),
+          credits(dictionarySize, ' Anagrams are retained and displayed based on their least common word, sorted from most to least common. In addition, anagrams with fewer words are preferred.'),
         )
       );
     },
