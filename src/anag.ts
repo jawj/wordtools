@@ -134,17 +134,17 @@ export async function find(s: string, keepN: number, reportEveryN: number, cb: (
   const wordWeights = await getWordWeights();
   makeWordsByWordable(wordWeights);
 
-  const cull = () => {
+  const winnow = () => {
     anagrams.sort(([, a], [, b]) => b - a);
     anagrams.splice(keepN);
-    leastGoodness = anagrams[keepN - 1][1];
+    if (anagrams.length > keepN) leastGoodness = anagrams[keepN - 1][1];
   };
 
   const t0 = typeof performance !== 'undefined' && performance.now();
 
   for (const wordables of wordablesFromString(s)) {
     if (evaluated >= reportAfterN) {
-      if (anagrams.length > keepN) cull();
+      if (anagrams.length > keepN) winnow();
 
       reportAfterN += reportEveryN;
       const stop = await cb({ working: true, evaluated, anagrams });
@@ -159,7 +159,7 @@ export async function find(s: string, keepN: number, reportEveryN: number, cb: (
     }
   }
 
-  cull();
+  winnow();
   if (t0) console.log(performance.now() - t0 + 'ms');
 
   await cb({ working: false, evaluated, anagrams });
