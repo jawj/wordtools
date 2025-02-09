@@ -96,11 +96,12 @@ function* wordablesFromString(s: string, kept: string[] = []): Generator<string[
  * This generator yields every possible combination of the strings in the
  * arrays it's given, much like a FULL JOIN in SQL.
  */
-function* allCombinationsOfStrings(s: string[][]) {
-  const lengths = s.map(s => s.length);
-  const indices = s.map(() => 0);
+function* allCombinationsOfStrings(strings: string[][]) {
+  const lengths = strings.map(s => s.length);
+  const indices = strings.map(() => 0);
   while (true) {
-    yield s.map((s, i) => s[indices[i]]);
+    yield strings.map((s, i) => s[indices[i]]);
+
     for (let i = 0; i < indices.length; i++) {
       indices[i]++;
       if (indices[i] < lengths[i]) break;
@@ -133,10 +134,18 @@ export async function find(s: string, keepN: number, reportEveryN: number, cb: (
   const wordWeights = await getWordWeights();
   makeWordsByWordable(wordWeights);
 
+  const cull = () => {
+    anagrams.sort(([, a], [, b]) => b - a);
+    anagrams.splice(keepN);
+    leastGoodness = anagrams[keepN - 1][1];
+  };
+
   const t0 = typeof performance !== 'undefined' && performance.now();
 
   for (const wordables of wordablesFromString(s)) {
     if (evaluated >= reportAfterN) {
+      if (anagrams.length > keepN) cull();
+
       reportAfterN += reportEveryN;
       const stop = await cb({ working: true, evaluated, anagrams });
       if (stop) break;
@@ -148,14 +157,9 @@ export async function find(s: string, keepN: number, reportEveryN: number, cb: (
       const goodness = goodnessOfWords(anag, wordWeights);
       if (goodness > leastGoodness) anagrams.push([anag, goodness]);
     }
-
-    if (anagrams.length > keepN) {
-      anagrams.sort(([, a], [, b]) => b - a);
-      anagrams.splice(keepN);
-      leastGoodness = anagrams[keepN - 1][1];
-    }
   }
 
+  cull();
   if (t0) console.log(performance.now() - t0 + 'ms');
 
   await cb({ working: false, evaluated, anagrams });

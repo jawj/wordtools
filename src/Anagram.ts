@@ -12,7 +12,7 @@ interface AnagramAttrs {
 
 const emptyValue = '-';
 const keepN = 10_000;
-const reportEveryN = 456_789;
+const reportEveryN = 876_543;
 
 function groupByLength(anagrams: Anagram[], max = 10) {
   const groups: Anagram[][] = [];
@@ -65,6 +65,7 @@ export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
                   spellcheck: false,
                   size: 15,
                   value: letters,
+                  disabled: status.working,
                   onchange(e: { currentTarget: HTMLInputElement; }) {
                     const { value } = e.currentTarget;
                     m.route.set(
@@ -115,7 +116,7 @@ export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
                   status.anagrams.map(a => m('span.match', a[0].join(' ')))
               ),
             ),
-          credits(dictionarySize, ' Anagrams are retained and displayed based on their least common word, sorted from most to least common. In addition, anagrams with fewer words are preferred.'),
+          credits(dictionarySize, ' Anagrams are retained and displayed based on their least common word, sorted from most to least common, while also favouring anagrams with fewer words.'),
         )
       );
     },
