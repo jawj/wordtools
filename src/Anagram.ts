@@ -116,7 +116,7 @@ export function Anagram(vnode: m.Vnode<AnagramAttrs>) {
                   status.anagrams.map(a => m('span.match', a[0].join(' ')))
               ),
             ),
-          credits(dictionarySize, ' Anagrams are retained and displayed based on their least common word, sorted from most to least common, while also favouring anagrams with fewer words.'),
+          credits(dictionarySize, ' Anagrams are retained and ranked by preferring those where the least common word is more common, those with fewer words, and (only very slightly) those where the mean word is more common.'),
         )
       );
     },
