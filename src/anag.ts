@@ -112,12 +112,17 @@ function* allCombinationsOfStrings(strings: string[][]) {
 }
 
 function goodnessOfWords(words: string[], wordWeights: WordWeights) {
-  // start with weight of lowest-weighed word
-  const adjustedWeights = words.map(word => wordWeights[word]);
-  const lowestAdjustedWeight = Math.min(...adjustedWeights);
-
-  // apply a preference for fewer words in total
-  return lowestAdjustedWeight / (words.length + 1);
+  const wordCount = words.length;
+  let sum = 0;
+  let least = Infinity;
+  for (let i = 0; i < wordCount; i++) {
+    const word = words[i];
+    const wordWeight = wordWeights[word];
+    if (wordWeight < least) least = wordWeight;
+    sum += wordWeight;
+  }
+  const mean = sum / wordCount;
+  return (least + .01 * mean) / (wordCount + 1);
 }
 
 export async function find(s: string, keepN: number, reportEveryN: number, cb: (status: AnagramStatus) => Promise<boolean>) {
