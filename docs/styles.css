@@ -94,6 +94,7 @@ button {
 
 input[type=search] {
   -webkit-appearance: none;
+  appearance: none;
   letter-spacing: .05ex;
   border: 1px #aaa solid;
   margin-right: .25ex;
