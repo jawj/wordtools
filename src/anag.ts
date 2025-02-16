@@ -134,15 +134,21 @@ export async function find(s: string, keepN: number, reportEveryN: number, cb: (
   let evaluated = 0;
   let reportAfterN = 0;
   let leastGoodness = -Infinity;
+  let sorted = false;
 
   // these are no-ops the second time round
   const wordWeights = await getWordWeights();
   makeWordsByWordable(wordWeights);
 
   const winnow = () => {
-    anagrams.sort(([, a], [, b]) => b - a);
-    anagrams.splice(keepN);
-    if (anagrams.length > keepN) leastGoodness = anagrams[keepN - 1][1];
+    if (!sorted) {
+      anagrams.sort(([, a], [, b]) => b - a);
+      sorted = true;
+    }
+    if (anagrams.length > keepN) {
+      anagrams.splice(keepN);
+      leastGoodness = anagrams[keepN - 1][1];
+    }
   };
 
   const t0 = typeof performance !== 'undefined' && performance.now();
@@ -160,7 +166,10 @@ export async function find(s: string, keepN: number, reportEveryN: number, cb: (
     for (const anag of allCombinationsOfStrings(words)) {
       evaluated++;
       const goodness = goodnessOfWords(anag, wordWeights);
-      if (goodness > leastGoodness) anagrams.push([anag, goodness]);
+      if (goodness > leastGoodness) {
+        anagrams.push([anag, goodness]);
+        sorted = false;
+      }
     }
   }
 
