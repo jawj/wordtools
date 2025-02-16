@@ -13,6 +13,6 @@ export function credits(dictionarySize: number, extra = '') {
     <a href="http://aspell.net/">aspell</a>,
     <a href="http://web.mit.edu/freebsd/head/share/dict/">web2</a>,
     <a href="https://en.wikpedia.org">Wikipedia</a> and
-    <a href="http://crr.ugent.be/archives/2045">Brysbaert et al</a>.
+    <a href="https://web.archive.org/web/20230401195411/https://crr.ugent.be/archives/2045">Brysbaert et al</a>.
     Many of these aren't valid in word games.` + extra));
 }
