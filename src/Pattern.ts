@@ -12,6 +12,7 @@ interface PatternAttrs {
   pattern: string | undefined;
   order: 'freq' | 'length' | 'a-z';
   direction: 'asc' | 'desc',
+  list: 'multi' | 'single',
   page: `${number}`;
 }
 
@@ -20,6 +21,7 @@ export function Pattern() {
     currentPattern: PatternAttrs['pattern'] = '',
     currentOrder: PatternAttrs['order'] | undefined,
     currentDirection: PatternAttrs['direction'],
+    currentList: PatternAttrs['list'],
     currentPage: PatternAttrs['page'],
     dictionarySize: number = 0,
     loading = true,
@@ -28,12 +30,13 @@ export function Pattern() {
     count = 0;
 
   async function updateMatches(vnode: m.VnodeDOM<PatternAttrs>) {
-    const { pattern, order, direction, page } = vnode.attrs;
-    if (pattern === currentPattern && order === currentOrder && direction === currentDirection && page === currentPage) return;
+    const { pattern, order, direction, list, page } = vnode.attrs;
+    if (pattern === currentPattern && order === currentOrder && direction === currentDirection && list === currentList && page === currentPage) return;
 
     currentPattern = pattern;
     currentOrder = order;
     currentDirection = direction;
+    currentList = list;
     currentPage = page;
 
     working = true;
@@ -41,7 +44,7 @@ export function Pattern() {
 
     const
       firstIndex = (parseInt(page, 10) - 1) * itemsPerPage,
-      matches = await wrappedWorker.wordsMatchingPattern(pattern!, order, direction, firstIndex, itemsPerPage);
+      matches = await wrappedWorker.wordsMatchingPattern(pattern!, order, direction, firstIndex, itemsPerPage, list === 'multi');
 
     results = matches.results;
     count = matches.count;
@@ -56,7 +59,19 @@ export function Pattern() {
         type: 'radio',
         name: 'order',
         checked: currentOrder === order && currentDirection === direction,
-        onchange: () => m.route.set('/pattern/:pattern/:order/:direction/:page', { ...params, order, direction, page: 1 })
+        onchange: () => m.route.set('/pattern/:pattern/:list/:order/:direction/:page', { ...params, order, direction, page: 1 })
+      }),
+      label
+    );
+  }
+
+  function multiRadio(list: 'multi' | 'single', label: string, params: Record<string, any>) {
+    return m('label',
+      m('input', {
+        type: 'radio',
+        name: 'multi',
+        checked: currentList === list,
+        onchange: () => m.route.set('/pattern/:pattern/:list/:order/:direction/:page', { ...params, list, page: 1 })
       }),
       label
     );
@@ -98,7 +113,7 @@ export function Pattern() {
           }, String(p))
         ),
         example = (pattern: string, orderDir = 'freq/desc') =>
-          m(m.route.Link, { href: `/pattern/${encodeURIComponent(pattern)}/${orderDir}/1`, selector: 'a.example' }, pattern),
+          m(m.route.Link, { href: `/pattern/${encodeURIComponent(pattern)}/single/${orderDir}/1`, selector: 'a.example' }, pattern),
         rURL = 'http://economicspsychologypolicy.blogspot.com/2013/10/lecture-summary-judgement-heuristics.html',
         nbspdash = m.trust(' —&nbsp;'),
         examples = [
@@ -136,7 +151,7 @@ export function Pattern() {
                   value: pattern,
                   onchange: (e: { currentTarget: HTMLInputElement; }) => {
                     const { value } = e.currentTarget;
-                    m.route.set('/pattern/:pattern/:order/:direction/1', { ...vnode.attrs, pattern: value });
+                    m.route.set('/pattern/:pattern/:list/:order/:direction/1', { ...vnode.attrs, pattern: value });
                   }
                 }),
                 m('button', 'Find'),
@@ -145,6 +160,10 @@ export function Pattern() {
                   m('div', m.trust(`Use <span class="letter">.</span> or <span class="letter">?</span> for each unknown letter`)),
                   m('div', m.trust(`Use <span class="letter">*</span> for any number of unknowns`)),
                   m('div', m.trust(`<i>Advanced:</i> prefix <span class="letter">~</span> to use a <a href="https://cs.lmu.edu/~ray/notes/regex/" target="_blank">regex</a>`)),
+                ),
+                m('.list',
+                  m('h4', 'Search'),
+                  m('div', multiRadio('single', ' Single words', vnode.attrs), multiRadio('multi', ' Multiple words and phrases', vnode.attrs)),
                 ),
                 m('.order',
                   m('h4', 'Show first'),

@@ -15,8 +15,8 @@ import { Anagram } from './Anagram';
 //   })).then(x => console.log(x));
 
 
-m.route(document.getElementById('main')!, '/pattern/-/freq/desc/1', {
-  '/pattern/:pattern/:order/:direction/:page': Pattern,
+m.route(document.getElementById('main')!, '/pattern/-/single/freq/desc/1', {
+  '/pattern/:pattern/:list/:order/:direction/:page': Pattern,
   '/anagram/:letters': Anagram,
 });
 
