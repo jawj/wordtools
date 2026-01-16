@@ -1,5 +1,6 @@
 import m from 'mithril';
 import { stringWithCommas } from './util';
+import { wordsCount, multiwordsCount } from './dictSizes';
 // @ts-ignore
 import puff from './puff.svg';
 
@@ -10,8 +11,8 @@ export function waitingMessage(message: string) {
   ];
 }
 
-export function credits(dictionarySize: number, extra = '') {
-  return m('.credits', m.trust(`We use a dictionary of ${stringWithCommas(dictionarySize)} names and English words derived from 
+export function credits(extra = '') {
+  return m('.credits', m.trust(`We use a dictionary of ${stringWithCommas(wordsCount)} names and English words derived from 
     <a href="http://aspell.net/">aspell</a>,
     <a href="http://web.mit.edu/freebsd/head/share/dict/">web2</a>,
     <a href="https://en.wikpedia.org">Wikipedia</a> and

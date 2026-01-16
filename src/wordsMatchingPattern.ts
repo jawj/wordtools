@@ -29,10 +29,13 @@ async function matches(pattern: string, multi: boolean) {
   for (const word in wordWeights as Words) if (re.test(word)) results.push(word);
 
   if (andBack) {
-    const backWords: Set<string> = new Set();
-    for (const word of results) backWords.add(word.split('').reverse().join(''));
+    const singleWordWeights = await getWordWeights();
+    const multiWordWeights = await getMultiWordWeights();
     const backResults: string[] = [];
-    for (const word in wordWeights) if (backWords.has(word)) backResults.push(word);
+    for (const word of results) {
+      const backword = word.split('').reverse().join('');
+      if (backword in singleWordWeights || backword in multiWordWeights) backResults.push(word);
+    }
     results = backResults;
   }
 

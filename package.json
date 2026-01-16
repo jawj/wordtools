@@ -4,8 +4,8 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "start": "esbuild --bundle --format=esm --outdir=docs --loader:.svg=file --servedir=docs --watch --sourcemap=inline --define:self.DEV=true src/index.ts src/combined.worker.ts src/*.css",
-    "build": "esbuild --bundle --format=esm --outdir=docs --loader:.svg=file --minify --line-limit=100                                         src/index.ts src/combined.worker.ts src/*.css"
+    "start": "node updateDictSizes.mjs && esbuild --bundle --format=esm --outdir=docs --loader:.svg=file --servedir=docs --watch --sourcemap=inline --define:self.DEV=true src/index.ts src/combined.worker.ts src/*.css",
+    "build": "node updateDictSizes.mjs && esbuild --bundle --format=esm --outdir=docs --loader:.svg=file --minify --line-limit=100                                         src/index.ts src/combined.worker.ts src/*.css"
   },
   "author": "George MacKerron",
   "license": "ISC",

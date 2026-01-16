@@ -2,6 +2,7 @@ import m from 'mithril';
 import { Nav } from './Nav';
 import { stringWithCommas } from './util';
 import { credits, waitingMessage } from './common';
+import { multiwordsCount } from './dictSizes';
 import wrappedWorker from './wrappedWorker';
 
 const
@@ -23,8 +24,7 @@ export function Pattern() {
     currentDirection: PatternAttrs['direction'],
     currentList: PatternAttrs['list'],
     currentPage: PatternAttrs['page'],
-    dictionarySize: number = 0,
-    loading = true,
+    loading = false,
     working = false,
     results: string[] = [],
     count = 0;
@@ -91,11 +91,6 @@ export function Pattern() {
   }
 
   return {
-    async oninit() {
-      dictionarySize = await wrappedWorker.getWordsCount();  // side effect: loads words!
-      loading = false;
-      m.redraw();
-    },
     oncreate: updateMatches,
     onupdate: updateMatches,
     view(vnode: m.Vnode<PatternAttrs>) {
@@ -187,7 +182,7 @@ export function Pattern() {
                   pagination(),
                 ],
               ),
-              credits(dictionarySize)
+              credits(` For multiple words, we use ${stringWithCommas(multiwordsCount)} entries from <a href="https://en.wiktionary.org/">Wiktionary</a>.`)
             )
         ));
     },
