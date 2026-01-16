@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "comlink": "^4.4.2",
-    "mithril": "^2.0.4"
+    "mithril": "^2.3.7"
   },
   "devDependencies": {
     "@types/mithril": "^2.0.6",
