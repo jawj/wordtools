@@ -1,0 +1,169 @@
+body {
+  font: 20px/1.4 'Source Sans Pro', sans-serif;
+  margin: 4vh 6vw;
+  background: #fff;
+  color: #333;
+}
+
+h1,
+h2 {
+  line-height: 1.1;
+}
+
+button {
+  cursor: pointer;
+  margin: 0 3px;
+}
+
+button.secondary {
+  background: transparent;
+  border: 1px solid #77f;
+  color: #77f;
+}
+
+.progress {
+  margin: 2ex 0;
+}
+
+.instructions {
+  margin: 2ex 0 0;
+}
+
+.order {
+  margin: .25ex 0 0;
+}
+
+#grouping,
+.message,
+.matches {
+  margin: 2ex 0 0;
+}
+
+a {
+  color: #77f;
+  text-decoration: none;
+}
+
+.pagination {
+  margin: 2ex 0;
+  text-align: center;
+}
+
+.pagination a {
+  display: inline-block;
+  padding: .4ex 1.2ex;
+  margin: 0 .6ex;
+  border: 1px solid #77f;
+}
+
+.pagination a.current {
+  color: #fff;
+  background: #77f;
+}
+
+.pagination .ellipsis {
+  display: inline-block;
+  padding: 0 1.2ex;
+  margin: 0 5px;
+}
+
+.credits {
+  margin: 40px 0 0;
+  color: #aaa;
+}
+
+.copyright {
+  margin: 25px 0 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: #aaa;
+}
+
+.credits a,
+.copyright a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+input,
+button {
+  font-size: 24px;
+  border-radius: 1ex;
+  padding: 0.5ex 1ex;
+}
+
+input[type=search] {
+  -webkit-appearance: none;
+  appearance: none;
+  letter-spacing: .05ex;
+  border: 1px #aaa solid;
+  margin-right: .25ex;
+  background: #fff;
+  text-transform: lowercase;
+  width: 200px;
+}
+
+input[type=search]#anag-input {
+  width: 300px;
+}
+
+input[type=search]::-webkit-search-cancel-button {
+  height: 20px;
+  width: 20px;
+  display: inline-block;
+  background: url(x.svg);
+  background-size: 20px 20px;
+  background-repeat: none;
+}
+
+button {
+  background: #77f;
+  border: none;
+  color: #fff;
+}
+
+h4 {
+  margin: 1.5ex 0 .5ex;
+}
+
+ul {
+  margin-top: .5ex;
+}
+
+.instructions div,
+.list div,
+.order div {
+  margin-left: 3ex;
+}
+
+label {
+  margin-right: 1ex;
+}
+
+.message {
+  font-style: italic;
+}
+
+.match {
+  display: inline-block;
+  padding: .33ex 1ex .5ex;
+  border-radius: 1ex;
+  background: #eee;
+  letter-spacing: .05ex;
+  margin: .25ex .75ex .25ex 0;
+  color: inherit;
+}
+
+.letter,
+.example {
+  display: inline-block;
+  padding: 0 .75ex .05ex;
+  margin: 1px;
+  letter-spacing: .05ex;
+  border-radius: 1ex;
+  background: #eee;
+}
+
+.example {
+  background: #eeeefc;
+}

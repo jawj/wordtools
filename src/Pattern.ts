@@ -107,7 +107,7 @@ export function Pattern() {
         lastOnPage = Math.min(firstOnPage + itemsPerPage - 1, count),
         pagination = () => paginationControls(page, lastPage,
           p => m(m.route.Link, {
-            href: '/pattern/:pattern/:order/:direction/:page',
+            href: '/pattern/:pattern/:list/:order/:direction/:page',
             selector: p === page ? 'a.current' : 'a',
             params: { ...vnode.attrs, page: p },
           }, String(p))
@@ -163,7 +163,7 @@ export function Pattern() {
                 ),
                 m('.list',
                   m('h4', 'Search'),
-                  m('div', multiRadio('single', ' Single words', vnode.attrs), multiRadio('multi', ' Multiple words and phrases', vnode.attrs)),
+                  m('div', multiRadio('single', ' Single words', vnode.attrs), multiRadio('multi', ' Multiple words', vnode.attrs)),
                 ),
                 m('.order',
                   m('h4', 'Show first'),

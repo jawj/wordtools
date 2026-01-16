@@ -1,9 +1,11 @@
 import m from 'mithril';
 import { stringWithCommas } from './util';
+// @ts-ignore
+import puff from './puff.svg';
 
 export function waitingMessage(message: string) {
   return [
-    m('img', { src: 'puff.svg', width: 26, height: 26, style: { verticalAlign: 'text-bottom' } }),
+    m('img', { src: puff, width: 26, height: 26, style: { verticalAlign: 'text-bottom' } }),
     m.trust(` &nbsp; ${message} …`)
   ];
 }

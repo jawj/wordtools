@@ -4,8 +4,8 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "start": "esbuild --bundle --format=esm --outdir=docs --servedir=docs --watch --sourcemap=inline src/index.ts src/combined.worker.ts",
-    "build": "esbuild --bundle --format=esm --outdir=docs --minify --line-limit=100                  src/index.ts src/combined.worker.ts"
+    "start": "esbuild --bundle --format=esm --outdir=docs --loader:.svg=file --servedir=docs --watch --sourcemap=inline --define:self.DEV=true src/index.ts src/combined.worker.ts src/*.css",
+    "build": "esbuild --bundle --format=esm --outdir=docs --loader:.svg=file --minify --line-limit=100                                         src/index.ts src/combined.worker.ts src/*.css"
   },
   "author": "George MacKerron",
   "license": "ISC",
@@ -16,7 +16,6 @@
   "devDependencies": {
     "@types/mithril": "^2.0.6",
     "esbuild": "^0.27.2",
-    "eslint-plugin-import": "^2.22.1",
     "remove-accents": "^0.5.0",
     "typescript": "^5.9.3"
   }
