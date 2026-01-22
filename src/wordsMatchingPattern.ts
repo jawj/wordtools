@@ -13,15 +13,16 @@ interface Cache {
 
 let cache: Cache | undefined;
 
-function makeRe(pattern: string) {
-  return new RegExp('^' + pattern.replace(/[*]/g, '.*').replace(/[?]/g, '.') + '$')
+function makeRe(pattern: string, excludeSpace = false) {
+  return new RegExp('^' + pattern.replace(/[*]/g, excludeSpace ? '[^ ]*' : '.*').replace(/[?]/g, excludeSpace ? '[^ ]' : '.') + '$');
 }
 
 async function matches(pattern: string, multi: boolean) {
   const
     isRe = pattern.startsWith('~'),
     andBack = pattern.endsWith('<'),
-    standardisedPattern = isRe ? pattern : pattern.toLowerCase().replace(/[^a-z.?*]/g, ''),
+    lowerPattern = pattern.toLowerCase(),
+    standardisedPattern = isRe ? pattern : lowerPattern.replace(/[^a-z.?*]/g, ''),
     re = isRe ? new RegExp(standardisedPattern.slice(1), 'i') : makeRe(standardisedPattern),
     wordWeights = await (multi ? getMultiWordWeights() : getWordWeights());
 
@@ -37,6 +38,18 @@ async function matches(pattern: string, multi: boolean) {
       if (backword in singleWordWeights || backword in multiWordWeights) backResults.push(word);
     }
     results = backResults;
+  }
+
+  if (multi && pattern.indexOf(' ') !== -1) {
+    const standardisedSpacedPattern = lowerPattern.replace(/[^a-z.?* ]/g, '');
+    const spacedRe = isRe ? new RegExp(standardisedSpacedPattern.slice(1), 'i') : makeRe(standardisedSpacedPattern, true);
+    const spacedResults = []
+    for (const result of results) {
+      const spaced = (wordWeights as MultiWords)[result][0];
+      const standardisedSpaced = spaced.toLowerCase().replace(/-/g, ' ').replace(/[^a-z.?* ]/g, '');
+      if (spacedRe.test(standardisedSpaced)) spacedResults.push(result);
+    }
+    results = spacedResults;
   }
 
   return results;
